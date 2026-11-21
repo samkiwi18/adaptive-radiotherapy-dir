@@ -1,0 +1,291 @@
+Section 10.1 - Efficient attention: TTO quality check
+=====================================================
+Notebook: main.ipynb, cell executed as In[17], GPU: NVIDIA A100, same session as sections 10
+and 10.2. 10 runs with the MONAI window attention, 10 with the efficient one (100-step section 9 TTO
+each, grid 448x288x32).
+
+Summary: the efficient attention stays inside the run-to-run variability of the TTO. The DVF difference
+MONAI vs efficient (2.22 mm mean, 2.31 mm in the lungs) is of the same order as MONAI vs MONAI (2.02 /
+2.15 mm) and efficient vs efficient (1.80 / 1.90 mm); every mean Dice differs by less than the std of
+the runs or by a few thousandths. The efficient attention is ~27% slower here (86.5 s vs 68.1 s per
+100-step TTO) because PyTorch runs it with the math fallback of scaled_dot_product_attention.
+
+--- Run 1/20: section 9 TTO, MONAI window attention ---
+VRAM allocated: 1.74 GB | reserved: 1.91 GB
+   Step   1/100 | loss 4.5466 | MIND 0.0135 | lung Dice 0.1727 | tumor Dice 0.5286 | OAR Dice 0.2658 | bone Dice 0.5049 | fold 0.000% | held-out Dice 0.5151 | bone |log detJ| 0.5495
+   Step  30/100 | loss 1.3002 | MIND 0.0195 | lung Dice 0.0370 | tumor Dice 0.0732 | OAR Dice 0.0975 | bone Dice 0.2617 | fold 0.005% | held-out Dice 0.3423 | bone |log detJ| 0.2079
+   Step  60/100 | loss 0.9645 | MIND 0.0206 | lung Dice 0.0273 | tumor Dice 0.0486 | OAR Dice 0.0691 | bone Dice 0.2090 | fold 0.010% | held-out Dice 0.3040 | bone |log detJ| 0.1905
+   Step  90/100 | loss 0.7808 | MIND 0.0203 | lung Dice 0.0235 | tumor Dice 0.0355 | OAR Dice 0.0564 | bone Dice 0.1726 | fold 0.010% | held-out Dice 0.2987 | bone |log detJ| 0.2059
+   Step 100/100 | loss 0.7471 | MIND 0.0207 | lung Dice 0.0225 | tumor Dice 0.0325 | OAR Dice 0.0545 | bone Dice 0.1662 | fold 0.009% | held-out Dice 0.3073 | bone |log detJ| 0.2371
+   LungCT_0030_0001_to_LungCT_0030_0000: Dice 0.9779
+
+--- Run 2/20: section 9 TTO, MONAI window attention ---
+VRAM allocated: 1.97 GB | reserved: 2.39 GB
+   Step   1/100 | loss 4.5466 | MIND 0.0135 | lung Dice 0.1727 | tumor Dice 0.5286 | OAR Dice 0.2658 | bone Dice 0.5049 | fold 0.000% | held-out Dice 0.5151 | bone |log detJ| 0.5495
+   Step  30/100 | loss 1.2872 | MIND 0.0191 | lung Dice 0.0364 | tumor Dice 0.0745 | OAR Dice 0.0955 | bone Dice 0.2576 | fold 0.004% | held-out Dice 0.3440 | bone |log detJ| 0.1999
+   Step  60/100 | loss 0.9522 | MIND 0.0204 | lung Dice 0.0257 | tumor Dice 0.0494 | OAR Dice 0.0667 | bone Dice 0.2077 | fold 0.006% | held-out Dice 0.3056 | bone |log detJ| 0.1823
+   Step  90/100 | loss 0.8521 | MIND 0.0199 | lung Dice 0.0249 | tumor Dice 0.0465 | OAR Dice 0.0612 | bone Dice 0.1755 | fold 0.008% | held-out Dice 0.3042 | bone |log detJ| 0.2313
+   Step 100/100 | loss 0.7489 | MIND 0.0200 | lung Dice 0.0221 | tumor Dice 0.0320 | OAR Dice 0.0550 | bone Dice 0.1680 | fold 0.010% | held-out Dice 0.3110 | bone |log detJ| 0.2481
+   LungCT_0030_0001_to_LungCT_0030_0000: Dice 0.9780
+
+--- Run 3/20: section 9 TTO, MONAI window attention ---
+VRAM allocated: 1.97 GB | reserved: 2.31 GB
+   Step   1/100 | loss 4.5466 | MIND 0.0135 | lung Dice 0.1727 | tumor Dice 0.5286 | OAR Dice 0.2658 | bone Dice 0.5049 | fold 0.000% | held-out Dice 0.5151 | bone |log detJ| 0.5495
+   Step  30/100 | loss 1.2630 | MIND 0.0184 | lung Dice 0.0348 | tumor Dice 0.0756 | OAR Dice 0.0907 | bone Dice 0.2546 | fold 0.009% | held-out Dice 0.3403 | bone |log detJ| 0.2102
+   Step  60/100 | loss 0.9596 | MIND 0.0191 | lung Dice 0.0259 | tumor Dice 0.0555 | OAR Dice 0.0662 | bone Dice 0.2006 | fold 0.004% | held-out Dice 0.2992 | bone |log detJ| 0.2037
+   Step  90/100 | loss 0.7842 | MIND 0.0197 | lung Dice 0.0236 | tumor Dice 0.0367 | OAR Dice 0.0578 | bone Dice 0.1695 | fold 0.004% | held-out Dice 0.3039 | bone |log detJ| 0.2248
+   Step 100/100 | loss 0.7347 | MIND 0.0188 | lung Dice 0.0221 | tumor Dice 0.0302 | OAR Dice 0.0570 | bone Dice 0.1612 | fold 0.005% | held-out Dice 0.3023 | bone |log detJ| 0.2506
+   LungCT_0030_0001_to_LungCT_0030_0000: Dice 0.9791
+
+--- Run 4/20: section 9 TTO, MONAI window attention ---
+VRAM allocated: 1.97 GB | reserved: 2.30 GB
+   Step   1/100 | loss 4.5466 | MIND 0.0135 | lung Dice 0.1727 | tumor Dice 0.5286 | OAR Dice 0.2658 | bone Dice 0.5049 | fold 0.000% | held-out Dice 0.5151 | bone |log detJ| 0.5495
+   Step  30/100 | loss 1.3137 | MIND 0.0193 | lung Dice 0.0364 | tumor Dice 0.0786 | OAR Dice 0.0971 | bone Dice 0.2592 | fold 0.007% | held-out Dice 0.3384 | bone |log detJ| 0.1958
+   Step  60/100 | loss 0.9272 | MIND 0.0205 | lung Dice 0.0258 | tumor Dice 0.0471 | OAR Dice 0.0655 | bone Dice 0.2020 | fold 0.004% | held-out Dice 0.2950 | bone |log detJ| 0.1943
+   Step  90/100 | loss 0.7742 | MIND 0.0205 | lung Dice 0.0226 | tumor Dice 0.0365 | OAR Dice 0.0562 | bone Dice 0.1684 | fold 0.004% | held-out Dice 0.3068 | bone |log detJ| 0.2408
+   Step 100/100 | loss 0.7528 | MIND 0.0203 | lung Dice 0.0217 | tumor Dice 0.0337 | OAR Dice 0.0563 | bone Dice 0.1642 | fold 0.004% | held-out Dice 0.3013 | bone |log detJ| 0.2624
+   LungCT_0030_0001_to_LungCT_0030_0000: Dice 0.9793
+
+--- Run 5/20: section 9 TTO, MONAI window attention ---
+VRAM allocated: 1.97 GB | reserved: 2.37 GB
+   Step   1/100 | loss 4.5466 | MIND 0.0135 | lung Dice 0.1727 | tumor Dice 0.5286 | OAR Dice 0.2658 | bone Dice 0.5049 | fold 0.000% | held-out Dice 0.5151 | bone |log detJ| 0.5495
+   Step  30/100 | loss 1.3031 | MIND 0.0188 | lung Dice 0.0363 | tumor Dice 0.0776 | OAR Dice 0.0978 | bone Dice 0.2550 | fold 0.003% | held-out Dice 0.3394 | bone |log detJ| 0.1950
+   Step  60/100 | loss 0.9344 | MIND 0.0202 | lung Dice 0.0264 | tumor Dice 0.0489 | OAR Dice 0.0674 | bone Dice 0.1977 | fold 0.004% | held-out Dice 0.2847 | bone |log detJ| 0.1952
+   Step  90/100 | loss 0.8021 | MIND 0.0201 | lung Dice 0.0228 | tumor Dice 0.0413 | OAR Dice 0.0575 | bone Dice 0.1704 | fold 0.002% | held-out Dice 0.2931 | bone |log detJ| 0.2380
+   Step 100/100 | loss 0.7363 | MIND 0.0199 | lung Dice 0.0225 | tumor Dice 0.0335 | OAR Dice 0.0535 | bone Dice 0.1613 | fold 0.003% | held-out Dice 0.2913 | bone |log detJ| 0.2586
+   LungCT_0030_0001_to_LungCT_0030_0000: Dice 0.9780
+
+--- Run 6/20: section 9 TTO, MONAI window attention ---
+VRAM allocated: 1.97 GB | reserved: 2.33 GB
+   Step   1/100 | loss 4.5466 | MIND 0.0135 | lung Dice 0.1727 | tumor Dice 0.5286 | OAR Dice 0.2658 | bone Dice 0.5049 | fold 0.000% | held-out Dice 0.5151 | bone |log detJ| 0.5495
+   Step  30/100 | loss 1.3133 | MIND 0.0193 | lung Dice 0.0376 | tumor Dice 0.0754 | OAR Dice 0.0997 | bone Dice 0.2589 | fold 0.005% | held-out Dice 0.3390 | bone |log detJ| 0.2308
+   Step  60/100 | loss 0.9506 | MIND 0.0201 | lung Dice 0.0260 | tumor Dice 0.0518 | OAR Dice 0.0669 | bone Dice 0.2016 | fold 0.006% | held-out Dice 0.2996 | bone |log detJ| 0.1797
+   Step  90/100 | loss 0.8049 | MIND 0.0202 | lung Dice 0.0231 | tumor Dice 0.0384 | OAR Dice 0.0590 | bone Dice 0.1741 | fold 0.004% | held-out Dice 0.3062 | bone |log detJ| 0.2361
+   Step 100/100 | loss 0.7475 | MIND 0.0200 | lung Dice 0.0226 | tumor Dice 0.0322 | OAR Dice 0.0562 | bone Dice 0.1639 | fold 0.004% | held-out Dice 0.3080 | bone |log detJ| 0.2443
+   LungCT_0030_0001_to_LungCT_0030_0000: Dice 0.9793
+
+--- Run 7/20: section 9 TTO, MONAI window attention ---
+VRAM allocated: 1.97 GB | reserved: 2.33 GB
+   Step   1/100 | loss 4.5466 | MIND 0.0135 | lung Dice 0.1727 | tumor Dice 0.5286 | OAR Dice 0.2658 | bone Dice 0.5049 | fold 0.000% | held-out Dice 0.5151 | bone |log detJ| 0.5495
+   Step  30/100 | loss 1.3308 | MIND 0.0180 | lung Dice 0.0395 | tumor Dice 0.0796 | OAR Dice 0.1002 | bone Dice 0.2571 | fold 0.010% | held-out Dice 0.3492 | bone |log detJ| 0.1952
+   Step  60/100 | loss 0.9495 | MIND 0.0199 | lung Dice 0.0263 | tumor Dice 0.0484 | OAR Dice 0.0688 | bone Dice 0.2039 | fold 0.008% | held-out Dice 0.3038 | bone |log detJ| 0.1898
+   Step  90/100 | loss 0.7909 | MIND 0.0200 | lung Dice 0.0225 | tumor Dice 0.0351 | OAR Dice 0.0580 | bone Dice 0.1763 | fold 0.005% | held-out Dice 0.3078 | bone |log detJ| 0.2147
+   Step 100/100 | loss 0.7312 | MIND 0.0200 | lung Dice 0.0225 | tumor Dice 0.0313 | OAR Dice 0.0541 | bone Dice 0.1620 | fold 0.006% | held-out Dice 0.3017 | bone |log detJ| 0.2298
+   LungCT_0030_0001_to_LungCT_0030_0000: Dice 0.9777
+
+--- Run 8/20: section 9 TTO, MONAI window attention ---
+VRAM allocated: 1.97 GB | reserved: 2.39 GB
+   Step   1/100 | loss 4.5466 | MIND 0.0135 | lung Dice 0.1727 | tumor Dice 0.5286 | OAR Dice 0.2658 | bone Dice 0.5049 | fold 0.000% | held-out Dice 0.5151 | bone |log detJ| 0.5495
+   Step  30/100 | loss 1.2960 | MIND 0.0185 | lung Dice 0.0350 | tumor Dice 0.0809 | OAR Dice 0.0927 | bone Dice 0.2562 | fold 0.005% | held-out Dice 0.3399 | bone |log detJ| 0.1655
+   Step  60/100 | loss 0.9512 | MIND 0.0197 | lung Dice 0.0259 | tumor Dice 0.0510 | OAR Dice 0.0663 | bone Dice 0.2050 | fold 0.006% | held-out Dice 0.2861 | bone |log detJ| 0.1637
+   Step  90/100 | loss 0.8055 | MIND 0.0199 | lung Dice 0.0236 | tumor Dice 0.0369 | OAR Dice 0.0603 | bone Dice 0.1744 | fold 0.008% | held-out Dice 0.2839 | bone |log detJ| 0.2153
+   Step 100/100 | loss 0.7463 | MIND 0.0194 | lung Dice 0.0226 | tumor Dice 0.0340 | OAR Dice 0.0554 | bone Dice 0.1618 | fold 0.007% | held-out Dice 0.2850 | bone |log detJ| 0.2220
+   LungCT_0030_0001_to_LungCT_0030_0000: Dice 0.9787
+
+--- Run 9/20: section 9 TTO, MONAI window attention ---
+VRAM allocated: 1.97 GB | reserved: 2.35 GB
+   Step   1/100 | loss 4.5466 | MIND 0.0135 | lung Dice 0.1727 | tumor Dice 0.5286 | OAR Dice 0.2658 | bone Dice 0.5049 | fold 0.000% | held-out Dice 0.5151 | bone |log detJ| 0.5495
+   Step  30/100 | loss 1.2710 | MIND 0.0191 | lung Dice 0.0335 | tumor Dice 0.0747 | OAR Dice 0.0927 | bone Dice 0.2576 | fold 0.006% | held-out Dice 0.3386 | bone |log detJ| 0.1783
+   Step  60/100 | loss 0.9722 | MIND 0.0208 | lung Dice 0.0262 | tumor Dice 0.0532 | OAR Dice 0.0677 | bone Dice 0.2073 | fold 0.008% | held-out Dice 0.2830 | bone |log detJ| 0.1692
+   Step  90/100 | loss 0.7858 | MIND 0.0205 | lung Dice 0.0229 | tumor Dice 0.0325 | OAR Dice 0.0599 | bone Dice 0.1745 | fold 0.008% | held-out Dice 0.2867 | bone |log detJ| 0.1995
+   Step 100/100 | loss 0.7582 | MIND 0.0200 | lung Dice 0.0225 | tumor Dice 0.0337 | OAR Dice 0.0570 | bone Dice 0.1648 | fold 0.009% | held-out Dice 0.2836 | bone |log detJ| 0.2164
+   LungCT_0030_0001_to_LungCT_0030_0000: Dice 0.9786
+
+--- Run 10/20: section 9 TTO, MONAI window attention ---
+VRAM allocated: 1.97 GB | reserved: 2.34 GB
+   Step   1/100 | loss 4.5466 | MIND 0.0135 | lung Dice 0.1727 | tumor Dice 0.5286 | OAR Dice 0.2658 | bone Dice 0.5049 | fold 0.000% | held-out Dice 0.5151 | bone |log detJ| 0.5495
+   Step  30/100 | loss 1.2805 | MIND 0.0192 | lung Dice 0.0366 | tumor Dice 0.0735 | OAR Dice 0.0948 | bone Dice 0.2573 | fold 0.004% | held-out Dice 0.3472 | bone |log detJ| 0.2019
+   Step  60/100 | loss 0.9702 | MIND 0.0203 | lung Dice 0.0270 | tumor Dice 0.0540 | OAR Dice 0.0682 | bone Dice 0.2033 | fold 0.003% | held-out Dice 0.2922 | bone |log detJ| 0.1879
+   Step  90/100 | loss 0.7819 | MIND 0.0200 | lung Dice 0.0230 | tumor Dice 0.0330 | OAR Dice 0.0590 | bone Dice 0.1736 | fold 0.006% | held-out Dice 0.2920 | bone |log detJ| 0.2396
+   Step 100/100 | loss 0.7584 | MIND 0.0201 | lung Dice 0.0222 | tumor Dice 0.0329 | OAR Dice 0.0562 | bone Dice 0.1683 | fold 0.007% | held-out Dice 0.2963 | bone |log detJ| 0.2474
+   LungCT_0030_0001_to_LungCT_0030_0000: Dice 0.9770
+
+--- Run 11/20: section 9 TTO, efficient window attention ---
+VRAM allocated: 1.97 GB | reserved: 2.29 GB
+   Step   1/100 | loss 4.5463 | MIND 0.0134 | lung Dice 0.1728 | tumor Dice 0.5288 | OAR Dice 0.2658 | bone Dice 0.5042 | fold 0.000% | held-out Dice 0.5152 | bone |log detJ| 0.5492
+   Step  30/100 | loss 1.2881 | MIND 0.0185 | lung Dice 0.0362 | tumor Dice 0.0748 | OAR Dice 0.0962 | bone Dice 0.2565 | fold 0.007% | held-out Dice 0.3441 | bone |log detJ| 0.1817
+   Step  60/100 | loss 0.9286 | MIND 0.0190 | lung Dice 0.0254 | tumor Dice 0.0469 | OAR Dice 0.0658 | bone Dice 0.2037 | fold 0.008% | held-out Dice 0.2792 | bone |log detJ| 0.1753
+   Step  90/100 | loss 0.8038 | MIND 0.0197 | lung Dice 0.0225 | tumor Dice 0.0403 | OAR Dice 0.0572 | bone Dice 0.1742 | fold 0.009% | held-out Dice 0.2899 | bone |log detJ| 0.2039
+   Step 100/100 | loss 0.7487 | MIND 0.0193 | lung Dice 0.0224 | tumor Dice 0.0326 | OAR Dice 0.0555 | bone Dice 0.1659 | fold 0.011% | held-out Dice 0.2847 | bone |log detJ| 0.2245
+   LungCT_0030_0001_to_LungCT_0030_0000: Dice 0.9786
+
+--- Run 12/20: section 9 TTO, efficient window attention ---
+VRAM allocated: 1.97 GB | reserved: 2.36 GB
+   Step   1/100 | loss 4.5463 | MIND 0.0134 | lung Dice 0.1728 | tumor Dice 0.5288 | OAR Dice 0.2658 | bone Dice 0.5042 | fold 0.000% | held-out Dice 0.5152 | bone |log detJ| 0.5492
+   Step  30/100 | loss 1.2355 | MIND 0.0179 | lung Dice 0.0341 | tumor Dice 0.0746 | OAR Dice 0.0899 | bone Dice 0.2455 | fold 0.005% | held-out Dice 0.3315 | bone |log detJ| 0.1684
+   Step  60/100 | loss 0.9234 | MIND 0.0189 | lung Dice 0.0256 | tumor Dice 0.0496 | OAR Dice 0.0649 | bone Dice 0.1973 | fold 0.002% | held-out Dice 0.2772 | bone |log detJ| 0.1661
+   Step  90/100 | loss 0.8000 | MIND 0.0188 | lung Dice 0.0226 | tumor Dice 0.0401 | OAR Dice 0.0569 | bone Dice 0.1737 | fold 0.001% | held-out Dice 0.2928 | bone |log detJ| 0.2022
+   Step 100/100 | loss 0.7513 | MIND 0.0188 | lung Dice 0.0231 | tumor Dice 0.0320 | OAR Dice 0.0565 | bone Dice 0.1659 | fold 0.002% | held-out Dice 0.2682 | bone |log detJ| 0.2137
+   LungCT_0030_0001_to_LungCT_0030_0000: Dice 0.9795
+
+--- Run 13/20: section 9 TTO, efficient window attention ---
+VRAM allocated: 1.97 GB | reserved: 2.38 GB
+   Step   1/100 | loss 4.5463 | MIND 0.0134 | lung Dice 0.1728 | tumor Dice 0.5288 | OAR Dice 0.2658 | bone Dice 0.5042 | fold 0.000% | held-out Dice 0.5152 | bone |log detJ| 0.5492
+   Step  30/100 | loss 1.2785 | MIND 0.0184 | lung Dice 0.0350 | tumor Dice 0.0769 | OAR Dice 0.0933 | bone Dice 0.2543 | fold 0.007% | held-out Dice 0.3455 | bone |log detJ| 0.1683
+   Step  60/100 | loss 0.9644 | MIND 0.0194 | lung Dice 0.0265 | tumor Dice 0.0569 | OAR Dice 0.0655 | bone Dice 0.2010 | fold 0.004% | held-out Dice 0.2826 | bone |log detJ| 0.1760
+   Step  90/100 | loss 0.8055 | MIND 0.0186 | lung Dice 0.0239 | tumor Dice 0.0394 | OAR Dice 0.0600 | bone Dice 0.1704 | fold 0.008% | held-out Dice 0.2882 | bone |log detJ| 0.2076
+   Step 100/100 | loss 0.7709 | MIND 0.0187 | lung Dice 0.0230 | tumor Dice 0.0390 | OAR Dice 0.0560 | bone Dice 0.1627 | fold 0.007% | held-out Dice 0.2826 | bone |log detJ| 0.2254
+   LungCT_0030_0001_to_LungCT_0030_0000: Dice 0.9782
+
+--- Run 14/20: section 9 TTO, efficient window attention ---
+VRAM allocated: 1.97 GB | reserved: 2.33 GB
+   Step   1/100 | loss 4.5463 | MIND 0.0134 | lung Dice 0.1728 | tumor Dice 0.5288 | OAR Dice 0.2658 | bone Dice 0.5042 | fold 0.000% | held-out Dice 0.5152 | bone |log detJ| 0.5492
+   Step  30/100 | loss 1.2900 | MIND 0.0185 | lung Dice 0.0354 | tumor Dice 0.0792 | OAR Dice 0.0956 | bone Dice 0.2505 | fold 0.005% | held-out Dice 0.3277 | bone |log detJ| 0.1932
+   Step  60/100 | loss 0.9645 | MIND 0.0194 | lung Dice 0.0259 | tumor Dice 0.0576 | OAR Dice 0.0660 | bone Dice 0.1993 | fold 0.004% | held-out Dice 0.2861 | bone |log detJ| 0.1826
+   Step  90/100 | loss 0.7710 | MIND 0.0186 | lung Dice 0.0237 | tumor Dice 0.0338 | OAR Dice 0.0569 | bone Dice 0.1710 | fold 0.006% | held-out Dice 0.3036 | bone |log detJ| 0.2114
+   Step 100/100 | loss 0.7469 | MIND 0.0186 | lung Dice 0.0224 | tumor Dice 0.0331 | OAR Dice 0.0557 | bone Dice 0.1638 | fold 0.007% | held-out Dice 0.2957 | bone |log detJ| 0.2395
+   LungCT_0030_0001_to_LungCT_0030_0000: Dice 0.9784
+
+--- Run 15/20: section 9 TTO, efficient window attention ---
+VRAM allocated: 1.97 GB | reserved: 2.34 GB
+   Step   1/100 | loss 4.5463 | MIND 0.0134 | lung Dice 0.1728 | tumor Dice 0.5288 | OAR Dice 0.2658 | bone Dice 0.5042 | fold 0.000% | held-out Dice 0.5152 | bone |log detJ| 0.5492
+   Step  30/100 | loss 1.2374 | MIND 0.0186 | lung Dice 0.0331 | tumor Dice 0.0734 | OAR Dice 0.0911 | bone Dice 0.2472 | fold 0.005% | held-out Dice 0.3291 | bone |log detJ| 0.1580
+   Step  60/100 | loss 0.9116 | MIND 0.0190 | lung Dice 0.0248 | tumor Dice 0.0470 | OAR Dice 0.0647 | bone Dice 0.1979 | fold 0.003% | held-out Dice 0.2832 | bone |log detJ| 0.1637
+   Step  90/100 | loss 0.7814 | MIND 0.0195 | lung Dice 0.0227 | tumor Dice 0.0395 | OAR Dice 0.0561 | bone Dice 0.1668 | fold 0.003% | held-out Dice 0.2896 | bone |log detJ| 0.2091
+   Step 100/100 | loss 0.7338 | MIND 0.0194 | lung Dice 0.0218 | tumor Dice 0.0326 | OAR Dice 0.0547 | bone Dice 0.1604 | fold 0.003% | held-out Dice 0.2889 | bone |log detJ| 0.2237
+   LungCT_0030_0001_to_LungCT_0030_0000: Dice 0.9787
+
+--- Run 16/20: section 9 TTO, efficient window attention ---
+VRAM allocated: 1.97 GB | reserved: 2.37 GB
+   Step   1/100 | loss 4.5463 | MIND 0.0134 | lung Dice 0.1728 | tumor Dice 0.5288 | OAR Dice 0.2658 | bone Dice 0.5042 | fold 0.000% | held-out Dice 0.5152 | bone |log detJ| 0.5492
+   Step  30/100 | loss 1.2487 | MIND 0.0185 | lung Dice 0.0347 | tumor Dice 0.0723 | OAR Dice 0.0921 | bone Dice 0.2513 | fold 0.004% | held-out Dice 0.3349 | bone |log detJ| 0.1795
+   Step  60/100 | loss 0.9228 | MIND 0.0194 | lung Dice 0.0252 | tumor Dice 0.0496 | OAR Dice 0.0651 | bone Dice 0.1969 | fold 0.005% | held-out Dice 0.2797 | bone |log detJ| 0.1669
+   Step  90/100 | loss 0.8356 | MIND 0.0188 | lung Dice 0.0233 | tumor Dice 0.0476 | OAR Dice 0.0590 | bone Dice 0.1717 | fold 0.006% | held-out Dice 0.2844 | bone |log detJ| 0.2160
+   Step 100/100 | loss 0.7430 | MIND 0.0188 | lung Dice 0.0223 | tumor Dice 0.0352 | OAR Dice 0.0546 | bone Dice 0.1598 | fold 0.006% | held-out Dice 0.2872 | bone |log detJ| 0.2127
+   LungCT_0030_0001_to_LungCT_0030_0000: Dice 0.9798
+
+--- Run 17/20: section 9 TTO, efficient window attention ---
+VRAM allocated: 1.97 GB | reserved: 2.41 GB
+   Step   1/100 | loss 4.5463 | MIND 0.0134 | lung Dice 0.1728 | tumor Dice 0.5288 | OAR Dice 0.2658 | bone Dice 0.5042 | fold 0.000% | held-out Dice 0.5152 | bone |log detJ| 0.5492
+   Step  30/100 | loss 1.2944 | MIND 0.0182 | lung Dice 0.0355 | tumor Dice 0.0807 | OAR Dice 0.0941 | bone Dice 0.2527 | fold 0.006% | held-out Dice 0.3440 | bone |log detJ| 0.1915
+   Step  60/100 | loss 0.9276 | MIND 0.0185 | lung Dice 0.0259 | tumor Dice 0.0482 | OAR Dice 0.0659 | bone Dice 0.2003 | fold 0.005% | held-out Dice 0.2758 | bone |log detJ| 0.1781
+   Step  90/100 | loss 0.7948 | MIND 0.0191 | lung Dice 0.0231 | tumor Dice 0.0370 | OAR Dice 0.0577 | bone Dice 0.1751 | fold 0.006% | held-out Dice 0.2906 | bone |log detJ| 0.2082
+   Step 100/100 | loss 0.7629 | MIND 0.0187 | lung Dice 0.0233 | tumor Dice 0.0364 | OAR Dice 0.0560 | bone Dice 0.1637 | fold 0.006% | held-out Dice 0.2908 | bone |log detJ| 0.2358
+   LungCT_0030_0001_to_LungCT_0030_0000: Dice 0.9789
+
+--- Run 18/20: section 9 TTO, efficient window attention ---
+VRAM allocated: 1.97 GB | reserved: 2.29 GB
+   Step   1/100 | loss 4.5463 | MIND 0.0134 | lung Dice 0.1728 | tumor Dice 0.5288 | OAR Dice 0.2658 | bone Dice 0.5042 | fold 0.000% | held-out Dice 0.5152 | bone |log detJ| 0.5492
+   Step  30/100 | loss 1.2444 | MIND 0.0184 | lung Dice 0.0327 | tumor Dice 0.0745 | OAR Dice 0.0904 | bone Dice 0.2501 | fold 0.003% | held-out Dice 0.3259 | bone |log detJ| 0.1613
+   Step  60/100 | loss 0.9541 | MIND 0.0193 | lung Dice 0.0258 | tumor Dice 0.0499 | OAR Dice 0.0681 | bone Dice 0.2054 | fold 0.000% | held-out Dice 0.2871 | bone |log detJ| 0.1637
+   Step  90/100 | loss 0.8069 | MIND 0.0203 | lung Dice 0.0237 | tumor Dice 0.0384 | OAR Dice 0.0589 | bone Dice 0.1746 | fold 0.002% | held-out Dice 0.2882 | bone |log detJ| 0.2066
+   Step 100/100 | loss 0.7682 | MIND 0.0202 | lung Dice 0.0226 | tumor Dice 0.0344 | OAR Dice 0.0568 | bone Dice 0.1688 | fold 0.001% | held-out Dice 0.2964 | bone |log detJ| 0.2100
+   LungCT_0030_0001_to_LungCT_0030_0000: Dice 0.9796
+
+--- Run 19/20: section 9 TTO, efficient window attention ---
+VRAM allocated: 1.97 GB | reserved: 2.36 GB
+   Step   1/100 | loss 4.5463 | MIND 0.0134 | lung Dice 0.1728 | tumor Dice 0.5288 | OAR Dice 0.2658 | bone Dice 0.5042 | fold 0.000% | held-out Dice 0.5152 | bone |log detJ| 0.5492
+   Step  30/100 | loss 1.2397 | MIND 0.0187 | lung Dice 0.0323 | tumor Dice 0.0769 | OAR Dice 0.0892 | bone Dice 0.2459 | fold 0.003% | held-out Dice 0.3191 | bone |log detJ| 0.1642
+   Step  60/100 | loss 0.9294 | MIND 0.0190 | lung Dice 0.0243 | tumor Dice 0.0498 | OAR Dice 0.0663 | bone Dice 0.1985 | fold 0.001% | held-out Dice 0.2784 | bone |log detJ| 0.1514
+   Step  90/100 | loss 0.8028 | MIND 0.0193 | lung Dice 0.0215 | tumor Dice 0.0426 | OAR Dice 0.0572 | bone Dice 0.1703 | fold 0.002% | held-out Dice 0.2889 | bone |log detJ| 0.1958
+   Step 100/100 | loss 0.7366 | MIND 0.0185 | lung Dice 0.0213 | tumor Dice 0.0316 | OAR Dice 0.0549 | bone Dice 0.1645 | fold 0.002% | held-out Dice 0.2849 | bone |log detJ| 0.2203
+   LungCT_0030_0001_to_LungCT_0030_0000: Dice 0.9795
+
+--- Run 20/20: section 9 TTO, efficient window attention ---
+VRAM allocated: 1.97 GB | reserved: 2.35 GB
+   Step   1/100 | loss 4.5463 | MIND 0.0134 | lung Dice 0.1728 | tumor Dice 0.5288 | OAR Dice 0.2658 | bone Dice 0.5042 | fold 0.000% | held-out Dice 0.5152 | bone |log detJ| 0.5492
+   Step  30/100 | loss 1.2826 | MIND 0.0195 | lung Dice 0.0346 | tumor Dice 0.0744 | OAR Dice 0.0975 | bone Dice 0.2530 | fold 0.003% | held-out Dice 0.3306 | bone |log detJ| 0.1828
+   Step  60/100 | loss 0.9287 | MIND 0.0203 | lung Dice 0.0246 | tumor Dice 0.0470 | OAR Dice 0.0674 | bone Dice 0.2005 | fold 0.002% | held-out Dice 0.2871 | bone |log detJ| 0.1731
+   Step  90/100 | loss 0.7630 | MIND 0.0192 | lung Dice 0.0223 | tumor Dice 0.0332 | OAR Dice 0.0562 | bone Dice 0.1705 | fold 0.002% | held-out Dice 0.2819 | bone |log detJ| 0.2118
+   Step 100/100 | loss 0.7252 | MIND 0.0194 | lung Dice 0.0214 | tumor Dice 0.0307 | OAR Dice 0.0538 | bone Dice 0.1623 | fold 0.002% | held-out Dice 0.2864 | bone |log detJ| 0.2328
+   LungCT_0030_0001_to_LungCT_0030_0000: Dice 0.9800
+
+Structure                        |         MONAI |     efficient | difference
+Tumor                            | 0.968 ± 0.003 | 0.971 ± 0.002 | +0.003
+superior lobe of left lung       | 0.965 ± 0.001 | 0.966 ± 0.001 | +0.000
+inferior lobe of left lung       | 0.961 ± 0.003 | 0.961 ± 0.002 | -0.001
+superior lobe of right lung      | 0.978 ± 0.001 | 0.979 ± 0.002 | +0.001
+middle lobe of right lung        | 0.964 ± 0.008 | 0.962 ± 0.010 | -0.002
+inferior lobe of right lung      | 0.968 ± 0.002 | 0.969 ± 0.001 | +0.001
+esophagus                        | 0.919 ± 0.004 | 0.918 ± 0.004 | -0.000
+trachea                          | 0.944 ± 0.003 | 0.946 ± 0.003 | +0.002
+heart                            | 0.927 ± 0.004 | 0.931 ± 0.003 | +0.003
+aorta                            | 0.952 ± 0.002 | 0.953 ± 0.001 | +0.001
+spinal cord                      | 0.924 ± 0.008 | 0.926 ± 0.005 | +0.002
+pulmonary vein                   | 0.742 ± 0.011 | 0.756 ± 0.009 | +0.013
+brachiocephalic trunk            | 0.763 ± 0.019 | 0.781 ± 0.017 | +0.019
+right subclavian artery          | 0.610 ± 0.022 | 0.612 ± 0.018 | +0.002
+left subclavian artery           | 0.434 ± 0.034 | 0.440 ± 0.027 | +0.005
+left common carotid artery       | 0.576 ± 0.025 | 0.584 ± 0.024 | +0.008
+left brachiocephalic vein        | 0.808 ± 0.009 | 0.810 ± 0.010 | +0.002
+right brachiocephalic vein       | 0.764 ± 0.017 | 0.754 ± 0.022 | -0.010
+left atrial appendage            | 0.814 ± 0.023 | 0.845 ± 0.011 | +0.031
+superior vena cava               | 0.867 ± 0.012 | 0.877 ± 0.013 | +0.010
+left deep back muscle            | 0.879 ± 0.020 | 0.886 ± 0.007 | +0.007
+right deep back muscle           | 0.844 ± 0.038 | 0.850 ± 0.020 | +0.006
+costal cartilage                 | 0.762 ± 0.021 | 0.742 ± 0.022 | -0.020
+right rib 1                      | 0.846 ± 0.008 | 0.846 ± 0.011 | -0.000
+right rib 2                      | 0.743 ± 0.024 | 0.740 ± 0.011 | -0.003
+right rib 3                      | 0.603 ± 0.031 | 0.611 ± 0.033 | +0.008
+right rib 4                      | 0.586 ± 0.032 | 0.595 ± 0.033 | +0.009
+right rib 5                      | 0.545 ± 0.035 | 0.568 ± 0.032 | +0.023
+right rib 6                      | 0.583 ± 0.031 | 0.616 ± 0.025 | +0.032
+right rib 7                      | 0.597 ± 0.078 | 0.584 ± 0.054 | -0.013
+T8 vertebra                      | 0.588 ± 0.005 | 0.573 ± 0.024 | -0.015
+T7 vertebra                      | 0.619 ± 0.018 | 0.622 ± 0.013 | +0.004
+T6 vertebra                      | 0.840 ± 0.006 | 0.841 ± 0.005 | +0.001
+T5 vertebra                      | 0.910 ± 0.003 | 0.912 ± 0.002 | +0.001
+T4 vertebra                      | 0.909 ± 0.003 | 0.912 ± 0.001 | +0.002
+T3 vertebra                      | 0.921 ± 0.004 | 0.922 ± 0.002 | +0.001
+T2 vertebra                      | 0.909 ± 0.007 | 0.909 ± 0.006 | +0.000
+left scapula                     | 0.887 ± 0.005 | 0.881 ± 0.004 | -0.005
+right scapula                    | 0.889 ± 0.006 | 0.894 ± 0.004 | +0.005
+left clavicle                    | 0.925 ± 0.004 | 0.923 ± 0.006 | -0.002
+right clavicle                   | 0.919 ± 0.004 | 0.921 ± 0.004 | +0.002
+left rib 1                       | 0.848 ± 0.009 | 0.856 ± 0.006 | +0.007
+left rib 2                       | 0.817 ± 0.007 | 0.823 ± 0.008 | +0.005
+left rib 3                       | 0.818 ± 0.011 | 0.828 ± 0.008 | +0.010
+left rib 4                       | 0.852 ± 0.004 | 0.856 ± 0.006 | +0.004
+left rib 5                       | 0.875 ± 0.007 | 0.877 ± 0.007 | +0.002
+left rib 6                       | 0.881 ± 0.011 | 0.887 ± 0.009 | +0.005
+left rib 7                       | 0.876 ± 0.010 | 0.875 ± 0.008 | -0.001
+sternum                          | 0.930 ± 0.003 | 0.929 ± 0.003 | -0.000
+
+Per run:
+    attention  final loss  lung Dice  tumor Dice  organs (loss) Dice  held-out Dice  bones (loss) Dice  folding %   time_s
+0       MONAI      0.7471     0.9779      0.9691              0.9498         0.7007             0.8505     0.0096  68.1234
+1       MONAI      0.7489     0.9780      0.9655              0.9502         0.7081             0.8510     0.0101  68.1629
+2       MONAI      0.7347     0.9791      0.9706              0.9523         0.6895             0.8545     0.0049  68.1442
+3       MONAI      0.7528     0.9793      0.9703              0.9531         0.6883             0.8545     0.0040  68.1344
+4       MONAI      0.7363     0.9780      0.9705              0.9488         0.7110             0.8571     0.0032  68.1342
+5       MONAI      0.7475     0.9793      0.9721              0.9506         0.6924             0.8554     0.0037  68.1564
+6       MONAI      0.7312     0.9777      0.9636              0.9491         0.6947             0.8536     0.0082  68.1223
+7       MONAI      0.7463     0.9787      0.9642              0.9508         0.7130             0.8551     0.0073  68.1376
+8       MONAI      0.7582     0.9786      0.9644              0.9508         0.7166             0.8525     0.0099  68.1461
+9       MONAI      0.7584     0.9770      0.9685              0.9482         0.7213             0.8494     0.0083  68.1346
+10  efficient      0.7487     0.9786      0.9733              0.9515         0.7108             0.8538     0.0096  86.4893
+11  efficient      0.7513     0.9795      0.9702              0.9523         0.7169             0.8537     0.0016  86.4727
+12  efficient      0.7709     0.9782      0.9717              0.9486         0.7257             0.8581     0.0084  86.4857
+13  efficient      0.7469     0.9784      0.9671              0.9492         0.6939             0.8546     0.0072  86.4855
+14  efficient      0.7338     0.9787      0.9728              0.9523         0.7032             0.8570     0.0037  86.4840
+15  efficient      0.7430     0.9798      0.9689              0.9522         0.7032             0.8575     0.0046  86.4747
+16  efficient      0.7629     0.9789      0.9695              0.9527         0.7117             0.8518     0.0065  86.4880
+17  efficient      0.7682     0.9796      0.9675              0.9509         0.7090             0.8492     0.0018  86.4681
+18  efficient      0.7366     0.9795      0.9727              0.9486         0.7142             0.8546     0.0014  86.4880
+19  efficient      0.7252     0.9800      0.9741              0.9527         0.7154             0.8577     0.0021  86.5240
+
+Mean ± std per attention:
+attention                  MONAI  efficient
+final loss         mean   0.7461     0.7488
+                   std    0.0094     0.0150
+lung Dice          mean   0.9784     0.9791
+                   std    0.0008     0.0006
+tumor Dice         mean   0.9679     0.9708
+                   std    0.0031     0.0025
+organs (loss) Dice mean   0.9504     0.9511
+                   std    0.0015     0.0017
+held-out Dice      mean   0.7036     0.7104
+                   std    0.0120     0.0088
+bones (loss) Dice  mean   0.8533     0.8548
+                   std    0.0024     0.0029
+folding %          mean   0.0069     0.0047
+                   std    0.0027     0.0031
+time_s             mean  68.1396    86.4860
+                   std    0.0131     0.0153
+
+DVF difference between pairs of runs (mean over the pairs of each group):
+                        mean |dDVF| mm  mean |dDVF| lung mm  max |dDVF| mm
+pair                                                                      
+MONAI vs MONAI                   2.021                2.152         27.506
+MONAI vs efficient               2.217                2.309         26.196
+efficient vs efficient           1.804                1.902         25.521

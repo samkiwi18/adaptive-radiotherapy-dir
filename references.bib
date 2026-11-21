@@ -1,0 +1,584 @@
+@comment{References of the adaptive radiotherapy DIR project. UTF-8. Checked on 2026-11-21.
+
+Only the sources cited in README.md and docs/ are listed.
+
+Custom fields, ignored by BibTeX and biblatex styles:
+  usedfor   = where the source is cited or used in the repository, and for what.
+  verified  = how the bibliographic record was checked. Vocabulary:
+    PDF first page: authors, title, venue or arXiv identifier read on the first page of the paper.
+    Crossref: DOI, venue, volume and pages from the Crossref record, title and first author matching.
+    DataCite: record of the DOI on DataCite (arXiv and Zenodo DOIs), title and first author matching.
+
+DOIs and arXiv identifiers are given only when verified.}
+
+@comment{---- Deformable registration ----}
+
+@inproceedings{arsigny2006logeuclidean,
+  author = {Arsigny, Vincent and Commowick, Olivier and Pennec, Xavier and Ayache, Nicholas},
+  title = {{A Log-Euclidean Framework for Statistics on Diffeomorphisms}},
+  booktitle = {Medical Image Computing and Computer-Assisted Intervention -- MICCAI 2006},
+  series = {Lecture Notes in Computer Science},
+  volume = {4190},
+  pages = {924--931},
+  year = {2006},
+  doi = {10.1007/11866565_113},
+  usedfor = {docs/method.md (integration); registration/model.py ScalingAndSquaring.},
+  verified = {PDF first page; Crossref.}
+}
+
+@article{ashburner2007dartel,
+  author = {Ashburner, John},
+  title = {{A fast diffeomorphic image registration algorithm}},
+  journal = {NeuroImage},
+  volume = {38},
+  number = {1},
+  pages = {95--113},
+  year = {2007},
+  doi = {10.1016/j.neuroimage.2007.07.007},
+  usedfor = {docs/method.md (integration): scaling and squaring in DARTEL.},
+  verified = {Crossref.}
+}
+
+@article{balakrishnan2019voxelmorph,
+  author = {Balakrishnan, Guha and Zhao, Amy and Sabuncu, Mert R. and Guttag, John and Dalca, Adrian V.},
+  title = {{VoxelMorph: A Learning Framework for Deformable Medical Image Registration}},
+  journal = {IEEE Transactions on Medical Imaging},
+  volume = {38},
+  number = {8},
+  pages = {1788--1800},
+  year = {2019},
+  doi = {10.1109/TMI.2019.2897538},
+  eprint = {1809.05231},
+  archiveprefix = {arXiv},
+  usedfor = {docs/method.md (losses): local NCC in learning-based registration.},
+  verified = {PDF first page (arXiv version); Crossref.}
+}
+
+@article{chen2022transmorph,
+  author = {Chen, Junyu and Frey, Eric C. and He, Yufan and Segars, William P. and Li, Ye and Du, Yong},
+  title = {{TransMorph: Transformer for unsupervised medical image registration}},
+  journal = {Medical Image Analysis},
+  volume = {82},
+  pages = {102615},
+  year = {2022},
+  doi = {10.1016/j.media.2022.102615},
+  eprint = {2111.10480},
+  archiveprefix = {arXiv},
+  usedfor = {docs/architecture.md: Swin encoders for registration.},
+  verified = {PDF first page; Crossref.}
+}
+
+@article{christensen2001consistent,
+  author = {Christensen, G. E. and Johnson, H. J.},
+  title = {{Consistent image registration}},
+  journal = {IEEE Transactions on Medical Imaging},
+  volume = {20},
+  number = {7},
+  pages = {568--582},
+  year = {2001},
+  doi = {10.1109/42.932742},
+  usedfor = {docs/method.md (losses): inverse-consistency loss.},
+  verified = {Crossref.}
+}
+
+@article{dalca2019diffeomorphic,
+  author = {Dalca, Adrian V. and Balakrishnan, Guha and Guttag, John and Sabuncu, Mert R.},
+  title = {{Unsupervised learning of probabilistic diffeomorphic registration for images and surfaces}},
+  journal = {Medical Image Analysis},
+  volume = {57},
+  pages = {226--236},
+  year = {2019},
+  doi = {10.1016/j.media.2019.07.006},
+  eprint = {1903.03545},
+  archiveprefix = {arXiv},
+  usedfor = {docs/method.md (integration): stationary velocity field integrated by scaling and squaring in a network.},
+  verified = {PDF first page (arXiv version); Crossref.}
+}
+
+@inproceedings{forstner1987,
+  author = {F{\"o}rstner, W. and G{\"u}lch, E.},
+  title = {{A fast operator for detection and precise location of distinct points, corners and centres of circular features}},
+  booktitle = {Proceedings of the ISPRS Intercommission Conference on Fast Processing of Photogrammetric Data},
+  pages = {281--305},
+  year = {1987},
+  usedfor = {docs/method.md (keypoints); registration/keypoints.py forstner_corners_3d.},
+  verified = {not checked: 1987 conference proceedings without a DOI.}
+}
+
+@article{heinrich2012mind,
+  author = {Heinrich, Mattias P. and Jenkinson, Mark and Bhushan, Manav and Matin, Tahreema and Gleeson, Fergus V. and Brady, Michael and Schnabel, Julia A.},
+  title = {{MIND: Modality independent neighbourhood descriptor for multi-modal deformable registration}},
+  journal = {Medical Image Analysis},
+  volume = {16},
+  number = {7},
+  pages = {1423--1435},
+  year = {2012},
+  doi = {10.1016/j.media.2012.05.008},
+  usedfor = {docs/method.md (losses); registration/losses.py MINDLoss, used in training and TTO.},
+  verified = {PDF first page (DOI printed on it); Crossref.}
+}
+
+@article{hering2022learn2reg,
+  author = {Hering, Alessa and Hansen, Lasse and Mok, Tony C. W. and Chung, Albert C. S. and Siebert, Hanna and H{\"a}ger, Stephanie and Lange, Annkristin and Kuckertz, Sven and Heldmann, Stefan and Shao, Wei and others},
+  title = {{Learn2Reg: Comprehensive Multi-Task Medical Image Registration Challenge, Dataset and Evaluation in the Era of Deep Learning}},
+  journal = {IEEE Transactions on Medical Imaging},
+  volume = {42},
+  number = {3},
+  pages = {697--712},
+  year = {2023},
+  doi = {10.1109/TMI.2022.3213983},
+  eprint = {2112.04489},
+  archiveprefix = {arXiv},
+  usedfor = {README (Data), docs/method.md (training): Learn2Reg lung CT task used for training, validation and test.},
+  verified = {PDF first page (arXiv version); Crossref.}
+}
+
+@article{hu2018weakly,
+  author = {Hu, Yipeng and Modat, Marc and Gibson, Eli and Li, Wenqi and Ghavami, Nooshin and Bonmati, Ester and Wang, Guotai and Bandula, Steven and Moore, Caroline M. and Emberton, Mark and Ourselin, S{\'e}bastien and Noble, J. Alison and Barratt, Dean C. and Vercauteren, Tom},
+  title = {{Weakly-supervised convolutional neural networks for multimodal image registration}},
+  journal = {Medical Image Analysis},
+  volume = {49},
+  pages = {1--13},
+  year = {2018},
+  doi = {10.1016/j.media.2018.07.002},
+  eprint = {1807.03361},
+  archiveprefix = {arXiv},
+  usedfor = {docs/method.md (losses): label (Dice) supervision of training and TTO.},
+  verified = {PDF first page (authors, title); Crossref; DataCite (arXiv).}
+}
+
+@inproceedings{jaderberg2015stn,
+  author = {Jaderberg, Max and Simonyan, Karen and Zisserman, Andrew and Kavukcuoglu, Koray},
+  title = {{Spatial Transformer Networks}},
+  booktitle = {Advances in Neural Information Processing Systems (NeurIPS)},
+  year = {2015},
+  eprint = {1506.02025},
+  archiveprefix = {arXiv},
+  usedfor = {docs/method.md (warping); registration/model.py SpatialTransformer3D.},
+  verified = {PDF first page (arXiv version); DataCite (arXiv).}
+}
+
+@misc{zhang2018icnet,
+  author = {Zhang, Jun},
+  title = {{Inverse-Consistent Deep Networks for Unsupervised Deformable Image Registration}},
+  year = {2018},
+  eprint = {1809.03443},
+  archiveprefix = {arXiv},
+  usedfor = {docs/method.md (losses): inverse-consistency loss.},
+  verified = {PDF first page; DataCite (arXiv).}
+}
+
+@misc{zhang2024gradientprojection,
+  author = {Zhang, Yi and Zhao, Yidong and Tao, Qian},
+  title = {{Improving Instance Optimization in Deformable Image Registration with Gradient Projection}},
+  year = {2024},
+  eprint = {2410.15767},
+  archiveprefix = {arXiv},
+  usedfor = {docs/method.md (test-time optimization): instance optimization.},
+  verified = {PDF first page; DataCite (arXiv).}
+}
+
+@comment{---- Transformers, Swin and U-shaped networks ----}
+
+@misc{ba2016layernorm,
+  author = {Ba, Jimmy Lei and Kiros, Jamie Ryan and Hinton, Geoffrey E.},
+  title = {{Layer Normalization}},
+  year = {2016},
+  eprint = {1607.06450},
+  archiveprefix = {arXiv},
+  usedfor = {docs/architecture.md: normalization in the Swin blocks.},
+  verified = {DataCite (arXiv).}
+}
+
+@inproceedings{dosovitskiy2021vit,
+  author = {Dosovitskiy, Alexey and Beyer, Lucas and Kolesnikov, Alexander and Weissenborn, Dirk and Zhai, Xiaohua and Unterthiner, Thomas and Dehghani, Mostafa and Minderer, Matthias and Heigold, Georg and Gelly, Sylvain and Uszkoreit, Jakob and Houlsby, Neil},
+  title = {{An Image is Worth 16x16 Words: Transformers for Image Recognition at Scale}},
+  booktitle = {International Conference on Learning Representations (ICLR)},
+  year = {2021},
+  eprint = {2010.11929},
+  archiveprefix = {arXiv},
+  usedfor = {docs/architecture.md: vision Transformer and patch embedding.},
+  verified = {DataCite (arXiv), authors included.}
+}
+
+@inproceedings{hatamizadeh2022swinunetr,
+  author = {Hatamizadeh, Ali and Nath, Vishwesh and Tang, Yucheng and Yang, Dong and Roth, Holger R. and Xu, Daguang},
+  title = {{Swin UNETR: Swin Transformers for Semantic Segmentation of Brain Tumors in MRI Images}},
+  booktitle = {Brainlesion: Glioma, Multiple Sclerosis, Stroke and Traumatic Brain Injuries (BrainLes 2021)},
+  series = {Lecture Notes in Computer Science},
+  volume = {12962},
+  pages = {272--284},
+  year = {2022},
+  doi = {10.1007/978-3-031-08999-2_22},
+  eprint = {2201.01266},
+  archiveprefix = {arXiv},
+  usedfor = {README, docs/method.md, docs/architecture.md; registration/model.py: backbone of the registration network (MONAI SwinUNETR).},
+  verified = {PDF first page (arXiv version); Crossref.}
+}
+
+@inproceedings{hatamizadeh2022unetr,
+  author = {Hatamizadeh, Ali and Tang, Yucheng and Nath, Vishwesh and Yang, Dong and Myronenko, Andriy and Landman, Bennett and Roth, Holger R. and Xu, Daguang},
+  title = {{UNETR: Transformers for 3D Medical Image Segmentation}},
+  booktitle = {IEEE/CVF Winter Conference on Applications of Computer Vision (WACV)},
+  pages = {1748--1758},
+  year = {2022},
+  doi = {10.1109/WACV51458.2022.00181},
+  eprint = {2103.10504},
+  archiveprefix = {arXiv},
+  usedfor = {docs/architecture.md: Transformer encoder with large patches.},
+  verified = {Crossref, authors included, pages from the IEEE edition; DataCite (arXiv).}
+}
+
+@misc{hendrycks2016gelu,
+  author = {Hendrycks, Dan and Gimpel, Kevin},
+  title = {{Gaussian Error Linear Units (GELUs)}},
+  year = {2016},
+  eprint = {1606.08415},
+  archiveprefix = {arXiv},
+  usedfor = {docs/architecture.md: activation of the Swin MLP.},
+  verified = {DataCite (arXiv).}
+}
+
+@inproceedings{liu2021swin,
+  author = {Liu, Ze and Lin, Yutong and Cao, Yue and Hu, Han and Wei, Yixuan and Zhang, Zheng and Lin, Stephen and Guo, Baining},
+  title = {{Swin Transformer: Hierarchical Vision Transformer using Shifted Windows}},
+  booktitle = {IEEE/CVF International Conference on Computer Vision (ICCV)},
+  pages = {9992--10002},
+  year = {2021},
+  doi = {10.1109/ICCV48922.2021.00986},
+  eprint = {2103.14030},
+  archiveprefix = {arXiv},
+  usedfor = {docs/architecture.md: shifted-window attention; registration/model.py efficient window attention.},
+  verified = {PDF first page (arXiv version); Crossref, pages from the IEEE edition.}
+}
+
+@inproceedings{tang2022selfsupervised,
+  author = {Tang, Yucheng and Yang, Dong and Li, Wenqi and Roth, Holger R. and Landman, Bennett and Xu, Daguang and Nath, Vishwesh and Hatamizadeh, Ali},
+  title = {{Self-Supervised Pre-Training of Swin Transformers for 3D Medical Image Analysis}},
+  booktitle = {IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR)},
+  pages = {20698--20708},
+  year = {2022},
+  doi = {10.1109/CVPR52688.2022.02007},
+  eprint = {2111.14791},
+  archiveprefix = {arXiv},
+  usedfor = {docs/architecture.md, docs/method.md; registration/model.py SSL_WEIGHTS_URL: self-supervised weights of the SwinUNETR encoder; weights/README.md.},
+  verified = {PDF first page (arXiv version); Crossref, pages from the IEEE edition.}
+}
+
+@inproceedings{ronneberger2015unet,
+  author = {Ronneberger, Olaf and Fischer, Philipp and Brox, Thomas},
+  title = {{U-Net: Convolutional Networks for Biomedical Image Segmentation}},
+  booktitle = {Medical Image Computing and Computer-Assisted Intervention -- MICCAI 2015},
+  series = {Lecture Notes in Computer Science},
+  volume = {9351},
+  pages = {234--241},
+  year = {2015},
+  doi = {10.1007/978-3-319-24574-4_28},
+  eprint = {1505.04597},
+  archiveprefix = {arXiv},
+  usedfor = {docs/architecture.md: U-shaped encoder-decoder.},
+  verified = {PDF first page (arXiv version); Crossref.}
+}
+
+@misc{ulyanov2016instancenorm,
+  author = {Ulyanov, Dmitry and Vedaldi, Andrea and Lempitsky, Victor},
+  title = {{Instance Normalization: The Missing Ingredient for Fast Stylization}},
+  year = {2016},
+  eprint = {1607.08022},
+  archiveprefix = {arXiv},
+  usedfor = {docs/architecture.md: normalization in the convolutional blocks.},
+  verified = {DataCite (arXiv).}
+}
+
+@misc{valanarasu2023disruptive,
+  author = {Valanarasu, Jeya Maria Jose and others},
+  title = {{Disruptive Autoencoders: Leveraging Low-level features for 3D Medical Image Pre-training}},
+  year = {2023},
+  eprint = {2307.16896},
+  archiveprefix = {arXiv},
+  usedfor = {docs/architecture.md: self-supervised pre-training associated by MONAI with the released encoder weights.},
+  verified = {DataCite (arXiv).}
+}
+
+@inproceedings{vaswani2017attention,
+  author = {Vaswani, Ashish and Shazeer, Noam and Parmar, Niki and Uszkoreit, Jakob and Jones, Llion and Gomez, Aidan N. and Kaiser, {\L}ukasz and Polosukhin, Illia},
+  title = {{Attention Is All You Need}},
+  booktitle = {Advances in Neural Information Processing Systems (NeurIPS)},
+  year = {2017},
+  eprint = {1706.03762},
+  archiveprefix = {arXiv},
+  usedfor = {docs/architecture.md: scaled dot-product attention.},
+  verified = {PDF first page (arXiv version); DataCite (arXiv).}
+}
+
+@comment{---- Optimization, training and memory ----}
+
+@misc{chen2016sublinear,
+  author = {Chen, Tianqi and Xu, Bing and Zhang, Chiyuan and Guestrin, Carlos},
+  title = {{Training Deep Nets with Sublinear Memory Cost}},
+  year = {2016},
+  eprint = {1604.06174},
+  archiveprefix = {arXiv},
+  usedfor = {docs/gpu_memory.md; registration/model.py set_activation_checkpointing.},
+  verified = {DataCite (arXiv).}
+}
+
+@inproceedings{dao2022flashattention,
+  author = {Dao, Tri and Fu, Daniel Y. and Ermon, Stefano and Rudra, Atri and R{\'e}, Christopher},
+  title = {{FlashAttention: Fast and Memory-Efficient Exact Attention with IO-Awareness}},
+  booktitle = {Advances in Neural Information Processing Systems (NeurIPS)},
+  volume = {35},
+  pages = {16344--16359},
+  year = {2022},
+  doi = {10.52202/068431-1189},
+  eprint = {2205.14135},
+  archiveprefix = {arXiv},
+  usedfor = {docs/gpu_memory.md: fused memory-efficient attention.},
+  verified = {Crossref; DataCite (arXiv).}
+}
+
+@inproceedings{kingma2015adam,
+  author = {Kingma, Diederik P. and Ba, Jimmy},
+  title = {{Adam: A Method for Stochastic Optimization}},
+  booktitle = {International Conference on Learning Representations (ICLR)},
+  year = {2015},
+  eprint = {1412.6980},
+  archiveprefix = {arXiv},
+  usedfor = {docs/method.md (training): warmup optimizer and TTO optimizer (registration/tto.py).},
+  verified = {DataCite (arXiv).}
+}
+
+@inproceedings{loshchilov2017sgdr,
+  author = {Loshchilov, Ilya and Hutter, Frank},
+  title = {{SGDR: Stochastic Gradient Descent with Warm Restarts}},
+  booktitle = {International Conference on Learning Representations (ICLR)},
+  year = {2017},
+  eprint = {1608.03983},
+  archiveprefix = {arXiv},
+  usedfor = {docs/method.md (training): cosine schedule (registration/utils.py get_warmup_cosine_scheduler).},
+  verified = {DataCite (arXiv).}
+}
+
+@inproceedings{loshchilov2019adamw,
+  author = {Loshchilov, Ilya and Hutter, Frank},
+  title = {{Decoupled Weight Decay Regularization}},
+  booktitle = {International Conference on Learning Representations (ICLR)},
+  year = {2019},
+  eprint = {1711.05101},
+  archiveprefix = {arXiv},
+  usedfor = {docs/method.md (training): AdamW of the finetune phase.},
+  verified = {DataCite (arXiv).}
+}
+
+@misc{rabe2021selfattention,
+  author = {Rabe, Markus N. and Staats, Charles},
+  title = {{Self-attention Does Not Need $O(n^2)$ Memory}},
+  year = {2021},
+  eprint = {2112.05682},
+  archiveprefix = {arXiv},
+  usedfor = {docs/gpu_memory.md: attention without the n x n matrix.},
+  verified = {DataCite (arXiv).}
+}
+
+@comment{---- Radiotherapy and dosimetry ----}
+
+@article{brock2017tg132,
+  author = {Brock, Kristy K. and Mutic, Sasa and McNutt, Todd R. and Li, Hua and Kessler, Marc L.},
+  title = {{Use of image registration and fusion algorithms and techniques in radiotherapy: Report of the AAPM Radiation Therapy Committee Task Group No. 132}},
+  journal = {Medical Physics},
+  volume = {44},
+  number = {7},
+  pages = {e43--e76},
+  year = {2017},
+  doi = {10.1002/mp.12256},
+  usedfor = {README (Limitations): commissioning and quality assurance of deformable registration.},
+  verified = {Crossref, authors included.}
+}
+
+@article{icru91,
+  author = {{International Commission on Radiation Units and Measurements}},
+  title = {{ICRU Report 91: Prescribing, Recording, and Reporting of Stereotactic Treatments with Small Photon Beams}},
+  journal = {Journal of the ICRU},
+  volume = {14},
+  number = {2},
+  pages = {1--160},
+  year = {2014},
+  doi = {10.1093/jicru/ndx017},
+  usedfor = {docs/method.md (gamma index and DVH); results/dosimetry/treatment_plan.txt: D98\%, D50\%, D2\% reporting of the SBRT plan.},
+  verified = {Crossref (record titled Report 91, Journal of the ICRU 14(2):1-160, 2014).}
+}
+
+@article{low1998gamma,
+  author = {Low, Daniel A. and Harms, William B. and Mutic, Sasa and Purdy, James A.},
+  title = {{A technique for the quantitative evaluation of dose distributions}},
+  journal = {Medical Physics},
+  volume = {25},
+  number = {5},
+  pages = {656--661},
+  year = {1998},
+  doi = {10.1118/1.598248},
+  usedfor = {docs/method.md; registration/dose_analysis/dose_analysis.py: gamma index.},
+  verified = {Crossref.}
+}
+
+@article{wieser2017matrad,
+  author = {Wieser, Hans-Peter and Cisternas, Eduardo and Wahl, Niklas and Ulrich, Silke and Stadler, Alexander and Mescher, Henning and M{\"u}ller, Lucas-Raphael and Klinge, Thomas and Gabrys, Hubert and Burigo, Lucas and others},
+  title = {{Development of the open-source dose calculation and optimization toolkit matRad}},
+  journal = {Medical Physics},
+  volume = {44},
+  number = {6},
+  pages = {2556--2568},
+  year = {2017},
+  doi = {10.1002/mp.12251},
+  usedfor = {docs/method.md; matlab/: plan optimization and dose recalculation.},
+  verified = {Crossref, first ten authors included.}
+}
+
+@comment{---- Software and data ----}
+
+@misc{cardoso2022monai,
+  author = {Cardoso, M. Jorge and others},
+  title = {{MONAI: An open-source framework for deep learning in healthcare}},
+  year = {2022},
+  eprint = {2211.02701},
+  archiveprefix = {arXiv},
+  usedfor = {README (Acknowledgements); registration/: SwinUNETR, DiceLoss and utilities of MONAI 1.6.0.},
+  verified = {DataCite (arXiv).}
+}
+
+@software{monai_software,
+  title = {{MONAI: Medical Open Network for AI}},
+  author = {{MONAI Consortium}},
+  version = {1.6.0},
+  doi = {10.5281/zenodo.20635439},
+  url = {https://github.com/Project-MONAI/MONAI},
+  usedfor = {README (Acknowledgements); requirements.txt (monai==1.6.0). Concept DOI of all versions: 10.5281/zenodo.4323058.},
+  verified = {DataCite (version 1.6.0 record, IsVersionOf the concept DOI).}
+}
+
+@software{matrad_software,
+  title = {{matRad: open-source multi-modality radiation treatment planning}},
+  author = {{e0404 / matRad development team}},
+  version = {3.2.3},
+  url = {https://github.com/e0404/matRad},
+  usedfor = {README (Acknowledgements); matlab/README.md: version used for the dose recalculation.},
+  verified = {version read from the local copy; no DOI checked.}
+}
+
+@inproceedings{paszke2019pytorch,
+  author = {Paszke, Adam and Gross, Sam and Massa, Francisco and Lerer, Adam and Bradbury, James and Chanan, Gregory and others},
+  title = {{PyTorch: An Imperative Style, High-Performance Deep Learning Library}},
+  booktitle = {Advances in Neural Information Processing Systems (NeurIPS)},
+  year = {2019},
+  eprint = {1912.01703},
+  archiveprefix = {arXiv},
+  usedfor = {README (Acknowledgements); requirements.txt (torch==2.13.0): the whole registration package.},
+  verified = {DataCite (arXiv), first six authors included.}
+}
+
+@software{pydicom_software,
+  title = {{pydicom}},
+  author = {{pydicom contributors}},
+  version = {3.0.2},
+  doi = {10.5281/zenodo.19119715},
+  url = {https://github.com/pydicom/pydicom},
+  usedfor = {README (Acknowledgements); requirements.txt (pydicom==3.0.2): DICOM CT, RTSTRUCT and RTDOSE input/output. Concept DOI: 10.5281/zenodo.1291985.},
+  verified = {DataCite (version 3.0.2 record, IsVersionOf the concept DOI).}
+}
+
+@software{nibabel_software,
+  title = {{NiBabel}},
+  author = {{nipy contributors}},
+  version = {5.4.2},
+  doi = {10.5281/zenodo.591597},
+  url = {https://github.com/nipy/nibabel},
+  usedfor = {README (Acknowledgements); requirements.txt (nibabel==5.4.2): NIfTI input and DVF export. The DOI is the concept DOI of all versions.},
+  verified = {DataCite (concept DOI; no record for version 5.4.2 was found).}
+}
+
+@article{biggs2022pymedphys,
+  author = {Biggs, Simon and others},
+  title = {{PyMedPhys: A community effort to develop an open, Python-based standard library for medical physics applications}},
+  journal = {Journal of Open Source Software},
+  volume = {7},
+  number = {78},
+  pages = {4555},
+  year = {2022},
+  doi = {10.21105/joss.04555},
+  usedfor = {README (Acknowledgements), docs/method.md; registration/dose_analysis/dose_analysis.py: gamma index.},
+  verified = {Crossref.}
+}
+
+@article{wasserthal2023totalsegmentator,
+  author = {Wasserthal, Jakob and others},
+  title = {{TotalSegmentator: Robust Segmentation of 104 Anatomic Structures in CT Images}},
+  journal = {Radiology: Artificial Intelligence},
+  volume = {5},
+  number = {5},
+  year = {2023},
+  doi = {10.1148/ryai.230024},
+  eprint = {2208.05868},
+  archiveprefix = {arXiv},
+  usedfor = {README, docs/method.md: organ RTSTRUCTs of the clinical case; registration/dose_analysis/build_structures.py builds the planning structures from them.},
+  verified = {Crossref; DataCite (arXiv).}
+}
+
+@misc{hering2020learn2reg_lung_data,
+  author = {Hering, Alessa and Murphy, Keelin and van Ginneken, Bram},
+  title = {{Learn2Reg Challenge: CT Lung Registration - Training Data}},
+  publisher = {Zenodo},
+  year = {2020},
+  doi = {10.5281/zenodo.3835682},
+  usedfor = {README (Data, Acknowledgements): training images and lung masks; licence reference of LungCT_dataset.json.},
+  verified = {DataCite; DOI also given in LungCT_dataset.json of the Learn2Reg LungCT release.}
+}
+
+@misc{hugo2016_4dlung_data,
+  author = {Hugo, Geoffrey D. and Weiss, Elisabeth and Sleeman, William C. and Balik, Salim and Keall, Paul J. and Lu, Jun and Williamson, Jeffrey F.},
+  title = {{Data from 4D Lung Imaging of NSCLC Patients (Version 2)}},
+  publisher = {The Cancer Imaging Archive},
+  year = {2016},
+  doi = {10.7937/K9/TCIA.2016.ELN8YGLE},
+  note = {Creative Commons Attribution 3.0 Unported},
+  usedfor = {README (4D-Lung case study, License, Acknowledgements), data/README.md, NOTICE: subject 107_HM10395 of the case study.},
+  verified = {DataCite (title, creators, year, publisher, license); data citation of the TCIA collection page, read 2026-11-21.}
+}
+
+@article{hugo2017_4dlung,
+  author = {Hugo, Geoffrey D. and Weiss, Elisabeth and Sleeman, William C. and Balik, Salim and Keall, Paul J. and Lu, Jun and Williamson, Jeffrey F.},
+  title = {{A longitudinal four-dimensional computed tomography and cone beam computed tomography dataset for image-guided radiation therapy research in lung cancer}},
+  journal = {Medical Physics},
+  volume = {44},
+  number = {2},
+  pages = {762--771},
+  year = {2017},
+  doi = {10.1002/mp.12059},
+  usedfor = {README (4D-Lung case study), data/README.md: descriptor of the 4D-Lung data set.},
+  verified = {Crossref, authors included.}
+}
+
+@article{balik2013_4dct_4dcbct,
+  author = {Balik, Salim and Weiss, Elisabeth and Jan, Nuzhat and Roman, Nicholas and Sleeman, William C. and Fatyga, Mirek and Christensen, Gary E. and Zhang, Cheng and Murphy, Martin J. and Lu, Jun and Keall, Paul and Williamson, Jeffrey F. and Hugo, Geoffrey D.},
+  title = {{Evaluation of 4-dimensional Computed Tomography to 4-dimensional Cone-Beam Computed Tomography Deformable Image Registration for Lung Cancer Adaptive Radiation Therapy}},
+  journal = {International Journal of Radiation Oncology, Biology, Physics},
+  volume = {86},
+  number = {2},
+  pages = {372--379},
+  year = {2013},
+  doi = {10.1016/j.ijrobp.2012.12.023},
+  usedfor = {docs/method.md, README: CT-to-CBCT deformable registration on the 4D-Lung data; publication citation of the collection.},
+  verified = {Crossref, authors included; listed on the TCIA collection page.}
+}
+
+@article{clark2013_tcia,
+  author = {Clark, Kenneth and Vendt, Bruce and Smith, Kirk and Freymann, John and Kirby, Justin and Koppel, Paul and Moore, Stephen and Phillips, Stanley and Maffitt, David and Pringle, Michael and Tarbox, Lawrence and Prior, Fred},
+  title = {{The Cancer Imaging Archive (TCIA): Maintaining and Operating a Public Information Repository}},
+  journal = {Journal of Digital Imaging},
+  volume = {26},
+  number = {6},
+  pages = {1045--1057},
+  year = {2013},
+  doi = {10.1007/s10278-013-9622-7},
+  usedfor = {README (Acknowledgements), NOTICE: The Cancer Imaging Archive.},
+  verified = {Crossref, authors included; citation given in the TCIA Data Usage Policy.}
+}

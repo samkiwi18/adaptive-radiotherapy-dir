@@ -1,0 +1,52 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "adaptive-radiotherapy-dir"
+version = "1.0.0"
+description = "Deformable CT-to-CT/CBCT registration with SwinUNETR, test-time optimization and dosimetric validation"
+readme = "README.md"
+license = "Apache-2.0"
+license-files = ["LICENSE"]
+authors = [{ name = "Samuele Caggia" }]
+requires-python = ">=3.11"
+dependencies = [
+    "numpy",
+    "scipy",
+    "pandas",
+    "matplotlib",
+    "scikit-image",
+    "nibabel",
+    "pydicom",
+    "torch",
+    "monai",
+    "einops",
+]
+
+[project.optional-dependencies]
+dosimetry = ["pymedphys", "interpolation", "legacy-cgi; python_version >= \"3.13\""]
+notebook = ["tensorboard", "ipywidgets", "jupyterlab"]
+dev = ["pytest", "ruff"]
+
+[project.scripts]
+dir-dose-analysis = "registration.dose_analysis.dose_analysis:main"
+dir-build-structures = "registration.dose_analysis.build_structures:main"
+
+[tool.setuptools.packages.find]
+include = ["registration*"]
+
+[tool.ruff]
+line-length = 120
+
+[tool.ruff.lint]
+select = ["E4", "E7", "E9", "F"]
+
+[tool.ruff.lint.per-file-ignores]
+"notebooks/*.ipynb" = ["E402"]
+"registration/losses.py" = ["E741"]
+"registration/dose_analysis/dose_analysis.py" = ["E731"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+filterwarnings = ["ignore::DeprecationWarning"]

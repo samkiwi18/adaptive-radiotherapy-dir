@@ -1,0 +1,44 @@
+\documentclass[border=6pt]{standalone}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage{amsmath,amssymb,bm}
+\usepackage{xcolor}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,positioning,fit,backgrounds,calc}
+\definecolor{swinc}{HTML}{2166AC}
+\definecolor{cnnc}{HTML}{1B7837}
+\definecolor{decc}{HTML}{E66101}
+\definecolor{botc}{HTML}{B2182B}
+\definecolor{headc}{HTML}{762A83}
+\newcommand{\code}[1]{\texttt{\detokenize{#1}}}
+\begin{document}
+\begin{tikzpicture}[
+  font=\footnotesize, >=Latex,
+  ten/.style={draw, rounded corners=2pt, align=center, inner sep=3pt, minimum height=0.9cm},
+  big/.style={ten, fill=botc!12, draw=botc!80!black},
+  small/.style={ten, fill=cnnc!12, draw=cnnc!80!black},
+  opn/.style={ten, fill=swinc!12, draw=swinc!80!black},
+  arr/.style={->, thick, black!70}
+]
+\node[font=\small\bfseries, anchor=west] at (-0.9,2.05) {(a) MONAI: all windows at once, float32 matrices};
+\node[ten, fill=black!5] (qkv) at (0,-0.35) {$Q, K, V$\\{\scriptsize $n_W$ windows}};
+\node[big] (mask) at (3.7,1.0) {mask $\mathcal{M}$\\{\scriptsize $n_W\times n\times n$, fp32: \textbf{905 MiB}}};
+\node[big] (A) at (3.7,-0.35) {$S = QK^\top\!/\sqrt d + B + \mathcal{M}$\\{\scriptsize $n_W\times h\times n\times n$, fp32: $\approx$\textbf{2.65 GiB}}};
+\node[big] (P) at (8.2,-0.35) {$A=\mathrm{SoftMax}(S)$\\{\scriptsize another copy: $\approx$\textbf{2.65 GiB}}};
+\node[ten, fill=black!5] (o1) at (11.3,-0.35) {$AV$};
+\draw[arr] (qkv) -- (A); \draw[arr] (mask) -- (A); \draw[arr] (A) -- (P); \draw[arr] (P) -- (o1);
+
+\begin{scope}[yshift=-4.1cm]
+\node[font=\small\bfseries, anchor=west] at (-0.9,2.05) {(b) Efficient: groups of 256 windows, compact mask, \code{scaled_dot_product_attention}};
+\node[ten, fill=black!5] (qkv2) at (0,-0.35) {$Q, K, V$\\{\scriptsize $n_W$ windows}};
+\node[small] (ids) at (3.7,1.0) {region indices $r$\\{\scriptsize $n_W\times n$: \textbf{2.6 MiB}}};
+\node[opn] (grp) at (3.7,-0.35) {group $g$ of 256 windows\\{\scriptsize $Q_g, K_g, V_g$}};
+\node[small] (mg) at (8.2,1.0) {$\mathcal{M}_g[i,j]=-100\cdot[r_i\neq r_j]$\\{\scriptsize for the current group only}};
+\node[opn] (sdpa) at (8.2,-0.35) {SDPA\\{\scriptsize $\mathrm{softmax}(Q_gK_g^\top/\sqrt d + B + \mathcal{M}_g)V_g$}};
+\node[ten, fill=black!5] (cat) at (11.6,-0.35) {concatenate\\{\scriptsize the groups}};
+\draw[arr] (qkv2) -- (grp); \draw[arr] (ids) -- (mg); \draw[arr] (grp) -- (sdpa); \draw[arr] (mg) -- (sdpa); \draw[arr] (sdpa) -- (cat);
+\draw[->, thick, decc!85!black, dashed] (sdpa.south) .. controls (8.2,-1.6) and (3.7,-1.6) .. (grp.south);
+\node[font=\scriptsize, text=decc!85!black, fill=white, inner sep=1pt] at (5.95,-1.62) {next group: the memory of the previous one is released};
+\end{scope}
+\end{tikzpicture}
+\end{document}

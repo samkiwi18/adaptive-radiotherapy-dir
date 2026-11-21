@@ -1,0 +1,60 @@
+Section 10.2 - Memory snapshot analysis of the section 9 TTO
+============================================================
+Snapshot: results_vram_profiling/tto_memory_snapshot.pickle (2-step section 9 TTO, grid 448x288x32,
+49 structures stored in bfloat16, efficient window attention + activation checkpointing, GPU: NVIDIA A100,
+same session as sections 10 and 10.1). Recorded with torch.cuda.memory._record_memory_history;
+9021 allocations replayed to find the peak. Printed by the cell (In[18]): peak 8779 MiB, baseline
+1784 MiB, phase peaks network_forward 6643 | losses 7840 | network_backward 8779 | optimizer 3139 |
+other 3799 MiB; the replay of the snapshot gives the same peak.
+
+
+1. Peak
+-------
+Total peak: 8779 MiB, 1.65 s into the 2.25 s recording, in the network backward phase: backward of the
+first convolution of the decoder1 residual block (96-channel concatenation -> 48 channels, full resolution).
+  - 1784 MiB baseline (weights, structure masks, images, masks); 2021 MiB were allocated when the
+    recording started, 237 MiB of them freed right at the start of the TTO
+  - 6758 MiB allocated during the TTO and alive at the peak (501 tensors); peak - baseline = 6995 MiB,
+    the same TTO memory measured in section 10
+
+
+2. What is alive at the peak (allocations made during the TTO)
+---------------------------------------------------------------
+   1137 MiB  cuDNN workspace of the weight gradient of decoder1 conv1 (the allocation that makes the peak,
+             at::native::raw_cudnn_convolution_backward_weight_out, no Python frame)
+    756 MiB  torch.cat of the upsampled features and the skip connection (unetr_block.py:84), recomputed
+             by the checkpointed decoder1
+    756 MiB  gradient of that concatenation (cudnn_convolution_backward_input)
+  ~1560 MiB  intermediate tensors of the recomputed residual block: conv and instance norm outputs,
+             378 MiB each (dynunet_block.py:100-104, instance norm computed in float32 under autocast)
+   ~756 MiB  other gradient buffers of the block (instance norm backward, 378 MiB each)
+    474 MiB  Adam states (tto.py:135)
+    189 MiB  MIND descriptor of the fixed image (losses.py:68), computed once and reused
+  ~1130 MiB  swinViT (compact shifted-window mask forward), encoders, patch embedding, small tensors
+
+The composition is the same as the final L4 snapshot: what remains is the full-resolution decoder1
+(48-96 channels on 448x288x32) and the cuDNN workspace of its backward.
+
+
+3. Attention kernel
+-------------------
+The C++ frames still show at::native::_scaled_dot_product_attention_math: PyTorch runs the efficient
+window attention with the math fallback of scaled_dot_product_attention on the A100 too. This explains
+the slower TTO with the efficient attention (86.5 s vs 68.1 s per 100 steps, section 10.1).
+
+
+4. Comparison with the L4 (same code)
+-------------------------------------
+Section 9 TTO, efficient attention + checkpointing     L4          A100
+  peak (section 10)                                   8350 MiB    8858 MiB
+  baseline (section 10)                               1736 MiB    1863 MiB
+  TTO memory (peak - baseline, section 10)            6614 MiB    6995 MiB
+  peak in the snapshot (section 10.2)                 8271 MiB    8779 MiB
+  step time (section 10)                              3.06 s      1.02 s
+
+Weights, gradients, Adam states and memory kept after the forward are identical on the two GPUs; the
+~380 MiB more of TTO memory on the A100 comes from temporary buffers of the backward, most likely the
+cuDNN workspaces (cudnn.benchmark chooses the algorithms per GPU); not verified.
+
+Overall, section 9 TTO peak: 17.5 GB at the start (structure copies, MONAI attention) -> 8.35 GB on the
+L4 / 8.86 GB on the A100 after the changes.

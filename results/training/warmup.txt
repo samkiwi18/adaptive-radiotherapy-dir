@@ -1,0 +1,62 @@
+=====================================================================
+RUN 2 - WARMUP
+=====================================================================
+---------------------------------------------------------------------
+COMMON SETTINGS OF RUN 2
+---------------------------------------------------------------------
+Data                 Learn2Reg Lung CT, intra-patient pairs expiration (moving) -> inspiration (fixed)
+Training             17 patients (case_004-case_020) + inverted pairs = 34 pairs
+Validation           3 patients (case_001, case_002, case_003), landmark TRE in mm on the native grid
+TRE without reg.     14.65 mm (validation mean)
+Point convention     training CSVs with x,y axes flipped (LPS vs RAS) and phases _0000/_0001 swapped
+                     with respect to the images; verified with the correlation of the patches around the points
+                     (0.80 keypoints, 0.76 landmarks versus 0.07-0.28 for the previous convention).
+                     The runs before the correction (run 1) used wrongly matched points and their TREs
+                     are not comparable.
+Resolution           TRAIN_TARGET_SHAPE = (192, 192, 192)
+Batch                BATCH_SIZE = 1, NUM_WORKERS = 10, data copied to a local disk
+Model                SwinUNETR (feature_size 48, 62.2 M parameters), MONAI self-supervised weights,
+                     Conv3d head 16->3 initialized to ~0 (initial DVF = identity),
+                     stationary velocity field integrated with scaling and squaring (9 steps)
+Precision            bfloat16 (NCC in float32), gradient clipping at 1.0
+Loss                 SuperRegistrationLoss: NCC (window 7, masked on the lungs) + 0.5 x MIND,
+                     multiscale 100% and 50%; label Dice 0.4 (DIFFERENTIABLE_DICE = True);
+                     DVF smoothness, inverse consistency (lambda_inv = 0.5), landmark loss
+                     (mean error in mm) and keypoint loss (smooth L1 in mm) with linear curriculum weights
+Saving               model with the best validation TRE in best_reg_model.pth,
+                     resume checkpoint at every epoch
+
+---------------------------------------------------------------------
+HYPERPARAMETERS
+---------------------------------------------------------------------
+Start                MONAI SSL weights, head initialized to ~0
+Trained parameters   the whole network except the SwinViT transformer; the patch embedding stays
+                     trainable (the SSL weights are identical on the two channels: with the patch embedding
+                     frozen the transformer would only see the mean of moving and fixed)
+Optimizer            Adam, lr = 1e-4
+Scheduler            linear warmup 3 epochs + cosine, total_epochs = 30, min_lr_ratio = 0.1
+Epochs / patience    30 / 10
+acc_steps            6 (effective batch 6)
+Curriculum           smooth (1.0, 1.0) | landmark (0.5, 0.5) | keypoint (0.5, 0.5)
+Augmentation         independent rigid motion on moving and fixed (p = 0.8 each, max rotation 0.05 rad,
+                     max translation 4 voxels), Y flip (p = 0.5), intensity transforms (p = 0.3 each)
+Duration             about 2 minutes per epoch
+
+---------------------------------------------------------------------
+RESULTS (per-epoch detail in warmup.csv)
+---------------------------------------------------------------------
+    1-10   mean TRE  14.39 mm | best  13.98 mm | mean train loss  3.300
+   11-20   mean TRE  13.91 mm | best  13.69 mm | mean train loss  3.076
+   21-30   mean TRE  13.47 mm | best  13.36 mm | mean train loss  2.981
+
+Best TRE             13.36 mm (epoch 27)
+Train loss           3.3663 -> 2.9088
+Folding              0.000% in all epochs
+
+---------------------------------------------------------------------
+NOTES
+---------------------------------------------------------------------
+- Steady TRE decrease, a new best model almost at every epoch.
+- Similarity and TRE improve together (in run 1, with the wrong points, they diverged):
+  this confirms that the point supervision is now consistent with the images.
+- The last three epochs (13.39-13.47 mm) are oscillation at the minimum learning rate.

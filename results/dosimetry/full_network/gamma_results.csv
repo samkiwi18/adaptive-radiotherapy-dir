@@ -1,0 +1,13 @@
+evaluated_dose,reference_dose,criterion,normalization,low_dose_cutoff_pct,pass_rate_pct,mean_gamma,gamma_p95,n_points
+dir_ct,real_ct,3%/3mm,global,10,99.8,0.062,0.14,431752
+dir_ct,real_ct,3%/2mm,global,10,99.59,0.067,0.15,431752
+dir_ct,real_ct,2%/2mm,global,10,99.51,0.085,0.2,431752
+dir_ct,real_ct,1%/1mm,global,10,98.75,0.146,0.39,431752
+dir_cbct,real_ct,3%/3mm,global,10,98.59,0.1,0.22,431752
+dir_cbct,real_ct,3%/2mm,global,10,97.95,0.113,0.26,431752
+dir_cbct,real_ct,2%/2mm,global,10,97.67,0.136,0.33,431752
+dir_cbct,real_ct,1%/1mm,global,10,96.31,0.22,0.65,431752
+baseline,real_ct,3%/3mm,global,10,99.53,0.134,0.38,431752
+baseline,real_ct,3%/2mm,global,10,99.29,0.151,0.43,431752
+baseline,real_ct,2%/2mm,global,10,98.97,0.189,0.57,431752
+baseline,real_ct,1%/1mm,global,10,93.16,0.349,1.13,431752

@@ -1,0 +1,185 @@
+real_ct    dose (32, 288, 448) spacing [3.0, 0.9766, 0.9766] mm | Dmax 9.512 GY
+dir_ct     dose (32, 288, 448) spacing [3.0, 0.9766, 0.9766] mm | Dmax 9.436 GY
+dir_cbct   dose (32, 288, 448) spacing [3.0, 0.9766, 0.9766] mm | Dmax 9.547 GY
+baseline   dose (32, 288, 448) spacing [3.0, 0.9766, 0.9766] mm | Dmax 9.370 GY
+real_ct    structures: GTV 13.2 cc, PTV 32.3 cc, Lungs-GTV 1463.1 cc, SpinalCord_PRV5 35.8 cc, Heart_total 113.1 cc, GreatVessels 142.4 cc, ChestWall 164.1 cc, Ring_PTV_10-30mm 349.2 cc, BODY 8060.8 cc, esophagus 13.8 cc, trachea 17.1 cc, T8 vertebra 11.3 cc, T7 vertebra 11.1 cc, T6 vertebra 15.4 cc, T5 vertebra 16.8 cc, T4 vertebra 16.6 cc, T3 vertebra 14.0 cc, T2 vertebra 1.7 cc, left scapula 39.4 cc, left clavicle 2.5 cc, right clavicle 2.7 cc, spinal cord 10.1 cc, left deep back muscle 27.2 cc, right deep back muscle 33.4 cc
+dir_ct     structures: GTV 12.9 cc, PTV 31.2 cc, Lungs-GTV 1417.5 cc, SpinalCord_PRV5 36.6 cc, Heart_total 133.8 cc, GreatVessels 156.0 cc, ChestWall 192.4 cc, Ring_PTV_10-30mm 341.3 cc, BODY 8085.9 cc, esophagus 14.3 cc, trachea 15.2 cc, T8 vertebra 0.7 cc, T7 vertebra 17.6 cc, T6 vertebra 20.0 cc, T5 vertebra 20.2 cc, T4 vertebra 18.8 cc, T3 vertebra 10.1 cc, T2 vertebra 0.8 cc, left scapula 44.4 cc, right scapula 39.9 cc, left clavicle 2.5 cc, right clavicle 2.2 cc, spinal cord 10.5 cc, left deep back muscle 31.0 cc, right deep back muscle 37.9 cc
+dir_cbct   structures: GTV 14.8 cc, PTV 34.6 cc, Lungs-GTV 1476.1 cc, SpinalCord_PRV5 36.1 cc, Heart_total 131.0 cc, GreatVessels 142.0 cc, ChestWall 108.7 cc, Ring_PTV_10-30mm 352.3 cc, BODY 7895.8 cc, esophagus 13.6 cc, trachea 15.4 cc, T8 vertebra 1.5 cc, T7 vertebra 14.9 cc, T6 vertebra 16.5 cc, T5 vertebra 14.5 cc, T4 vertebra 13.4 cc, T3 vertebra 12.0 cc, T2 vertebra 1.6 cc, left scapula 30.5 cc, right scapula 25.5 cc, left clavicle 2.1 cc, right clavicle 2.5 cc, spinal cord 10.0 cc, left deep back muscle 36.6 cc, right deep back muscle 39.9 cc
+baseline   structures: GTV 17.1 cc, PTV 38.3 cc, Lungs-GTV 1429.7 cc, SpinalCord_PRV5 37.0 cc, Heart_total 138.4 cc, GreatVessels 148.6 cc, ChestWall 165.1 cc, Ring_PTV_10-30mm 367.0 cc, BODY 8388.1 cc, esophagus 13.0 cc, trachea 17.6 cc, T8 vertebra 1.5 cc, T7 vertebra 17.2 cc, T6 vertebra 18.6 cc, T5 vertebra 17.1 cc, T4 vertebra 16.2 cc, T3 vertebra 13.6 cc, T2 vertebra 1.7 cc, left scapula 39.2 cc, left clavicle 2.1 cc, right clavicle 2.4 cc, spinal cord 10.8 cc, left deep back muscle 30.7 cc, right deep back muscle 34.4 cc
+
+Data-consistency checks
+  real_ct    GTV: 0 voxels with dose ~0 (0.0%), 0 below 50% Dmax, slices with zero dose []
+  real_ct    PTV: 0 voxels with dose ~0 (0.0%), 0 below 50% Dmax, slices with zero dose []
+  dir_ct     GTV: 0 voxels with dose ~0 (0.0%), 0 below 50% Dmax, slices with zero dose []
+  dir_ct     PTV: 0 voxels with dose ~0 (0.0%), 0 below 50% Dmax, slices with zero dose []
+  dir_cbct   GTV: 0 voxels with dose ~0 (0.0%), 0 below 50% Dmax, slices with zero dose []
+  dir_cbct   PTV: 0 voxels with dose ~0 (0.0%), 0 below 50% Dmax, slices with zero dose []
+  baseline   GTV: 0 voxels with dose ~0 (0.0%), 30 below 50% Dmax, slices with zero dose []
+  baseline   PTV: 0 voxels with dose ~0 (0.0%), 1981 below 50% Dmax, slices with zero dose []
+  calculation region dir_ct vs real_ct: voxels with dose only in the reference 38545, only in dir_ct 50222
+  calculation region dir_cbct vs real_ct: voxels with dose only in the reference 84456, only in dir_cbct 30291
+  calculation region baseline vs real_ct: voxels with dose only in the reference 33734, only in baseline 138076
+
+Gamma index (global, low-dose cutoff 10% of the reference Dmax, reference = real_ct)
+  dir_ct     3%/3mm: pass  99.78% | mean gamma 0.082 | p95 0.21 | points 431752
+  dir_ct     3%/2mm: pass  99.58% | mean gamma 0.091 | p95 0.25 | points 431752
+  dir_ct     2%/2mm: pass  99.46% | mean gamma 0.115 | p95 0.32 | points 431752
+  dir_ct     1%/1mm: pass  97.88% | mean gamma 0.206 | p95 0.62 | points 431752
+  dir_cbct   3%/3mm: pass  98.79% | mean gamma 0.102 | p95 0.23 | points 431752
+  dir_cbct   3%/2mm: pass  98.16% | mean gamma 0.115 | p95 0.26 | points 431752
+  dir_cbct   2%/2mm: pass  97.87% | mean gamma 0.139 | p95 0.34 | points 431752
+  dir_cbct   1%/1mm: pass  96.28% | mean gamma 0.229 | p95 0.67 | points 431752
+  baseline   3%/3mm: pass  99.53% | mean gamma 0.134 | p95 0.38 | points 431752
+  baseline   3%/2mm: pass  99.29% | mean gamma 0.151 | p95 0.43 | points 431752
+  baseline   2%/2mm: pass  98.97% | mean gamma 0.189 | p95 0.57 | points 431752
+  baseline   1%/1mm: pass  93.16% | mean gamma 0.349 | p95 1.13 | points 431752
+
+Geometry against the reference
+  dir_ct     GTV                            Dice 0.928 | HD95 1.95 mm | centroid shift 0.28 mm
+  dir_ct     PTV                            Dice 0.943 | HD95 2.18 mm | centroid shift 0.44 mm
+  dir_ct     SpinalCord_PRV5                Dice 0.831 | HD95 4.14 mm | centroid shift 2.77 mm
+  dir_ct     Heart_total                    Dice 0.803 | HD95 5.02 mm | centroid shift 0.63 mm
+  dir_ct     GreatVessels                   Dice 0.845 | HD95 4.03 mm | centroid shift 1.65 mm
+  dir_ct     ChestWall                      Dice 0.650 | HD95 3.58 mm | centroid shift 4.80 mm
+  dir_ct     Ring_PTV_10-30mm               Dice 0.955 | HD95 2.18 mm | centroid shift 0.95 mm
+  dir_ct     BODY                           Dice 0.983 | HD95 3.91 mm | centroid shift 2.74 mm
+  dir_ct     esophagus                      Dice 0.756 | HD95 2.93 mm | centroid shift 4.96 mm
+  dir_ct     trachea                        Dice 0.766 | HD95 3.15 mm | centroid shift 1.48 mm
+  dir_ct     T8 vertebra                    Dice 0.056 | HD95 43.50 mm | centroid shift 21.17 mm
+  dir_ct     T7 vertebra                    Dice 0.308 | HD95 11.95 mm | centroid shift 9.97 mm
+  dir_ct     T6 vertebra                    Dice 0.590 | HD95 5.73 mm | centroid shift 3.88 mm
+  dir_ct     T5 vertebra                    Dice 0.698 | HD95 3.58 mm | centroid shift 1.84 mm
+  dir_ct     T4 vertebra                    Dice 0.718 | HD95 3.71 mm | centroid shift 2.98 mm
+  dir_ct     T3 vertebra                    Dice 0.678 | HD95 3.58 mm | centroid shift 2.49 mm
+  dir_ct     T2 vertebra                    Dice 0.589 | HD95 3.58 mm | centroid shift 1.84 mm
+  dir_ct     left scapula                   Dice 0.657 | HD95 4.63 mm | centroid shift 4.87 mm
+  dir_ct     left clavicle                  Dice 0.841 | HD95 1.95 mm | centroid shift 0.86 mm
+  dir_ct     right clavicle                 Dice 0.800 | HD95 3.00 mm | centroid shift 1.14 mm
+  dir_ct     spinal cord                    Dice 0.688 | HD95 4.03 mm | centroid shift 2.80 mm
+  dir_ct     left deep back muscle          Dice 0.776 | HD95 3.91 mm | centroid shift 3.21 mm
+  dir_ct     right deep back muscle         Dice 0.787 | HD95 4.19 mm | centroid shift 3.26 mm
+  dir_ct     Lungs-GTV                      Dice 0.942 | HD95 4.19 mm | centroid shift 1.89 mm
+  dir_cbct   GTV                            Dice 0.881 | HD95 3.00 mm | centroid shift 1.22 mm
+  dir_cbct   PTV                            Dice 0.918 | HD95 3.00 mm | centroid shift 1.30 mm
+  dir_cbct   SpinalCord_PRV5                Dice 0.729 | HD95 6.44 mm | centroid shift 4.59 mm
+  dir_cbct   Heart_total                    Dice 0.805 | HD95 4.98 mm | centroid shift 2.98 mm
+  dir_cbct   GreatVessels                   Dice 0.840 | HD95 3.71 mm | centroid shift 0.51 mm
+  dir_cbct   ChestWall                      Dice 0.491 | HD95 6.00 mm | centroid shift 7.85 mm
+  dir_cbct   Ring_PTV_10-30mm               Dice 0.945 | HD95 2.93 mm | centroid shift 1.70 mm
+  dir_cbct   BODY                           Dice 0.977 | HD95 4.92 mm | centroid shift 1.20 mm
+  dir_cbct   esophagus                      Dice 0.783 | HD95 2.76 mm | centroid shift 0.98 mm
+  dir_cbct   trachea                        Dice 0.831 | HD95 2.76 mm | centroid shift 2.92 mm
+  dir_cbct   T8 vertebra                    Dice 0.140 | HD95 39.69 mm | centroid shift 19.08 mm
+  dir_cbct   T7 vertebra                    Dice 0.289 | HD95 11.13 mm | centroid shift 11.51 mm
+  dir_cbct   T6 vertebra                    Dice 0.469 | HD95 7.53 mm | centroid shift 6.37 mm
+  dir_cbct   T5 vertebra                    Dice 0.510 | HD95 6.66 mm | centroid shift 5.80 mm
+  dir_cbct   T4 vertebra                    Dice 0.602 | HD95 5.73 mm | centroid shift 4.07 mm
+  dir_cbct   T3 vertebra                    Dice 0.731 | HD95 3.71 mm | centroid shift 2.77 mm
+  dir_cbct   T2 vertebra                    Dice 0.719 | HD95 2.76 mm | centroid shift 1.36 mm
+  dir_cbct   left scapula                   Dice 0.678 | HD95 3.58 mm | centroid shift 4.73 mm
+  dir_cbct   left clavicle                  Dice 0.785 | HD95 2.76 mm | centroid shift 1.95 mm
+  dir_cbct   right clavicle                 Dice 0.717 | HD95 3.09 mm | centroid shift 2.87 mm
+  dir_cbct   spinal cord                    Dice 0.505 | HD95 6.25 mm | centroid shift 5.02 mm
+  dir_cbct   left deep back muscle          Dice 0.718 | HD95 4.88 mm | centroid shift 3.12 mm
+  dir_cbct   right deep back muscle         Dice 0.603 | HD95 6.94 mm | centroid shift 5.37 mm
+  dir_cbct   Lungs-GTV                      Dice 0.920 | HD95 5.73 mm | centroid shift 4.22 mm
+  baseline   GTV                            Dice 0.458 | HD95 9.39 mm | centroid shift 9.68 mm
+  baseline   PTV                            Dice 0.614 | HD95 9.49 mm | centroid shift 9.62 mm
+  baseline   SpinalCord_PRV5                Dice 0.898 | HD95 1.95 mm | centroid shift 1.41 mm
+  baseline   Heart_total                    Dice 0.719 | HD95 6.87 mm | centroid shift 5.24 mm
+  baseline   GreatVessels                   Dice 0.804 | HD95 4.92 mm | centroid shift 4.00 mm
+  baseline   ChestWall                      Dice 0.701 | HD95 3.00 mm | centroid shift 2.23 mm
+  baseline   Ring_PTV_10-30mm               Dice 0.728 | HD95 9.24 mm | centroid shift 9.66 mm
+  baseline   BODY                           Dice 0.967 | HD95 5.30 mm | centroid shift 1.24 mm
+  baseline   esophagus                      Dice 0.730 | HD95 3.09 mm | centroid shift 2.15 mm
+  baseline   trachea                        Dice 0.677 | HD95 3.91 mm | centroid shift 3.30 mm
+  baseline   T8 vertebra                    Dice 0.213 | HD95 20.97 mm | centroid shift 16.44 mm
+  baseline   T7 vertebra                    Dice 0.448 | HD95 10.60 mm | centroid shift 8.55 mm
+  baseline   T6 vertebra                    Dice 0.744 | HD95 4.19 mm | centroid shift 3.79 mm
+  baseline   T5 vertebra                    Dice 0.825 | HD95 2.18 mm | centroid shift 1.64 mm
+  baseline   T4 vertebra                    Dice 0.826 | HD95 2.18 mm | centroid shift 1.61 mm
+  baseline   T3 vertebra                    Dice 0.840 | HD95 1.95 mm | centroid shift 1.65 mm
+  baseline   T2 vertebra                    Dice 0.780 | HD95 1.95 mm | centroid shift 2.20 mm
+  baseline   left scapula                   Dice 0.231 | HD95 5.70 mm | centroid shift 5.52 mm
+  baseline   left clavicle                  Dice 0.744 | HD95 2.93 mm | centroid shift 2.61 mm
+  baseline   right clavicle                 Dice 0.800 | HD95 2.18 mm | centroid shift 2.31 mm
+  baseline   spinal cord                    Dice 0.811 | HD95 1.95 mm | centroid shift 1.44 mm
+  baseline   left deep back muscle          Dice 0.760 | HD95 3.91 mm | centroid shift 3.18 mm
+  baseline   right deep back muscle         Dice 0.857 | HD95 2.93 mm | centroid shift 2.64 mm
+  baseline   Lungs-GTV                      Dice 0.933 | HD95 5.30 mm | centroid shift 0.58 mm
+
+Gamma inside the reference structures
+  dir_ct     GTV (real_ct)                            2%/2mm: 99.98% (4596 points)
+  dir_ct     PTV (real_ct)                            2%/2mm: 99.74% (11289 points)
+  dir_ct     Lungs-GTV (real_ct)                      2%/2mm: 99.97% (82725 points)
+  dir_ct     SpinalCord_PRV5 (real_ct)                2%/2mm: 100.0% (4826 points)
+  dir_ct     Heart_total (real_ct)                    2%/2mm: 100.0% (1572 points)
+  dir_ct     GreatVessels (real_ct)                   2%/2mm: 100.0% (16966 points)
+  dir_ct     ChestWall (real_ct)                      2%/2mm: 100.0% (7040 points)
+  dir_ct     Ring_PTV_10-30mm (real_ct)               2%/2mm: 100.0% (84280 points)
+  dir_ct     BODY (real_ct)                           2%/2mm: 99.46% (431752 points)
+  dir_ct     esophagus (real_ct)                      2%/2mm: 100.0% (1988 points)
+  dir_ct     trachea (real_ct)                        2%/2mm: 100.0% (2764 points)
+  dir_ct     T8 vertebra (real_ct)                    2%/2mm: % (0 points)
+  dir_ct     T7 vertebra (real_ct)                    2%/2mm: % (0 points)
+  dir_ct     T6 vertebra (real_ct)                    2%/2mm: % (0 points)
+  dir_ct     T5 vertebra (real_ct)                    2%/2mm: 100.0% (3071 points)
+  dir_ct     T4 vertebra (real_ct)                    2%/2mm: 100.0% (5006 points)
+  dir_ct     T3 vertebra (real_ct)                    2%/2mm: 100.0% (2302 points)
+  dir_ct     T2 vertebra (real_ct)                    2%/2mm: % (0 points)
+  dir_ct     left scapula (real_ct)                   2%/2mm: 100.0% (7800 points)
+  dir_ct     left clavicle (real_ct)                  2%/2mm: 100.0% (3 points)
+  dir_ct     right clavicle (real_ct)                 2%/2mm: % (0 points)
+  dir_ct     spinal cord (real_ct)                    2%/2mm: 100.0% (1376 points)
+  dir_ct     left deep back muscle (real_ct)          2%/2mm: 100.0% (2220 points)
+  dir_ct     right deep back muscle (real_ct)         2%/2mm: 100.0% (376 points)
+  dir_cbct   GTV (real_ct)                            2%/2mm: 100.0% (4596 points)
+  dir_cbct   PTV (real_ct)                            2%/2mm: 100.0% (11289 points)
+  dir_cbct   Lungs-GTV (real_ct)                      2%/2mm: 100.0% (82725 points)
+  dir_cbct   SpinalCord_PRV5 (real_ct)                2%/2mm: 100.0% (4826 points)
+  dir_cbct   Heart_total (real_ct)                    2%/2mm: 100.0% (1572 points)
+  dir_cbct   GreatVessels (real_ct)                   2%/2mm: 100.0% (16966 points)
+  dir_cbct   ChestWall (real_ct)                      2%/2mm: 100.0% (7040 points)
+  dir_cbct   Ring_PTV_10-30mm (real_ct)               2%/2mm: 100.0% (84280 points)
+  dir_cbct   BODY (real_ct)                           2%/2mm: 97.87% (431752 points)
+  dir_cbct   esophagus (real_ct)                      2%/2mm: 100.0% (1988 points)
+  dir_cbct   trachea (real_ct)                        2%/2mm: 100.0% (2764 points)
+  dir_cbct   T8 vertebra (real_ct)                    2%/2mm: % (0 points)
+  dir_cbct   T7 vertebra (real_ct)                    2%/2mm: % (0 points)
+  dir_cbct   T6 vertebra (real_ct)                    2%/2mm: % (0 points)
+  dir_cbct   T5 vertebra (real_ct)                    2%/2mm: 100.0% (3071 points)
+  dir_cbct   T4 vertebra (real_ct)                    2%/2mm: 100.0% (5006 points)
+  dir_cbct   T3 vertebra (real_ct)                    2%/2mm: 100.0% (2302 points)
+  dir_cbct   T2 vertebra (real_ct)                    2%/2mm: % (0 points)
+  dir_cbct   left scapula (real_ct)                   2%/2mm: 100.0% (7800 points)
+  dir_cbct   left clavicle (real_ct)                  2%/2mm: 100.0% (3 points)
+  dir_cbct   right clavicle (real_ct)                 2%/2mm: % (0 points)
+  dir_cbct   spinal cord (real_ct)                    2%/2mm: 100.0% (1376 points)
+  dir_cbct   left deep back muscle (real_ct)          2%/2mm: 100.0% (2220 points)
+  dir_cbct   right deep back muscle (real_ct)         2%/2mm: 100.0% (376 points)
+  baseline   GTV (real_ct)                            2%/2mm: 86.66% (4596 points)
+  baseline   PTV (real_ct)                            2%/2mm: 92.04% (11289 points)
+  baseline   Lungs-GTV (real_ct)                      2%/2mm: 99.67% (82725 points)
+  baseline   SpinalCord_PRV5 (real_ct)                2%/2mm: 100.0% (4826 points)
+  baseline   Heart_total (real_ct)                    2%/2mm: 100.0% (1572 points)
+  baseline   GreatVessels (real_ct)                   2%/2mm: 100.0% (16966 points)
+  baseline   ChestWall (real_ct)                      2%/2mm: 100.0% (7040 points)
+  baseline   Ring_PTV_10-30mm (real_ct)               2%/2mm: 100.0% (84280 points)
+  baseline   BODY (real_ct)                           2%/2mm: 98.97% (431752 points)
+  baseline   esophagus (real_ct)                      2%/2mm: 100.0% (1988 points)
+  baseline   trachea (real_ct)                        2%/2mm: 100.0% (2764 points)
+  baseline   T8 vertebra (real_ct)                    2%/2mm: % (0 points)
+  baseline   T7 vertebra (real_ct)                    2%/2mm: % (0 points)
+  baseline   T6 vertebra (real_ct)                    2%/2mm: % (0 points)
+  baseline   T5 vertebra (real_ct)                    2%/2mm: 100.0% (3071 points)
+  baseline   T4 vertebra (real_ct)                    2%/2mm: 100.0% (5006 points)
+  baseline   T3 vertebra (real_ct)                    2%/2mm: 100.0% (2302 points)
+  baseline   T2 vertebra (real_ct)                    2%/2mm: % (0 points)
+  baseline   left scapula (real_ct)                   2%/2mm: 99.95% (7800 points)
+  baseline   left clavicle (real_ct)                  2%/2mm: 100.0% (3 points)
+  baseline   right clavicle (real_ct)                 2%/2mm: % (0 points)
+  baseline   spinal cord (real_ct)                    2%/2mm: 100.0% (1376 points)
+  baseline   left deep back muscle (real_ct)          2%/2mm: 100.0% (2220 points)
+  baseline   right deep back muscle (real_ct)         2%/2mm: 100.0% (376 points)
+
+Results written to results

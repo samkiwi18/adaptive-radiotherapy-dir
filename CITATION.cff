@@ -1,0 +1,70 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+title: "Deep-learning deformable registration for adaptive radiotherapy"
+abstract: >-
+  SwinUNETR-based diffeomorphic CT-to-CT/CBCT registration with per-patient test-time optimization,
+  mass-preserving HU correction, DICOM CT and RTSTRUCT export, and dosimetric validation with matRad,
+  gamma index and DVH.
+type: software
+authors:
+  - family-names: Caggia
+    given-names: Samuele
+version: 1.0.0
+license: Apache-2.0
+keywords:
+  - deformable image registration
+  - adaptive radiotherapy
+  - SwinUNETR
+  - test-time optimization
+  - CBCT
+  - matRad
+references:
+  - type: data
+    title: "Data from 4D Lung Imaging of NSCLC Patients (Version 2)"
+    authors:
+      - family-names: Hugo
+        given-names: Geoffrey D.
+      - family-names: Weiss
+        given-names: Elisabeth
+      - family-names: Sleeman
+        given-names: William C.
+      - family-names: Balik
+        given-names: Salim
+      - family-names: Keall
+        given-names: Paul J.
+      - family-names: Lu
+        given-names: Jun
+      - family-names: Williamson
+        given-names: Jeffrey F.
+    publisher:
+      name: The Cancer Imaging Archive
+    year: 2016
+    doi: 10.7937/K9/TCIA.2016.ELN8YGLE
+    license: CC-BY-3.0
+  - type: data
+    title: "Learn2Reg Challenge: CT Lung Registration - Training Data"
+    authors:
+      - family-names: Hering
+        given-names: Alessa
+      - family-names: Murphy
+        given-names: Keelin
+      - family-names: van Ginneken
+        given-names: Bram
+    publisher:
+      name: Zenodo
+    year: 2020
+    doi: 10.5281/zenodo.3835682
+    license: CC-BY-4.0
+  - type: article
+    title: "Learn2Reg: Comprehensive Multi-Task Medical Image Registration Challenge, Dataset and Evaluation in the Era of Deep Learning"
+    authors:
+      - family-names: Hering
+        given-names: Alessa
+    journal: IEEE Transactions on Medical Imaging
+    volume: 42
+    issue: 3
+    start: 697
+    end: 712
+    year: 2023
+    doi: 10.1109/TMI.2022.3213983
+repository-code: "https://github.com/samcaggia/adaptive-radiotherapy-dir"

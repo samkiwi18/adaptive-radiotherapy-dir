@@ -1,0 +1,75 @@
+=====================================================================
+RUN 2 - FINETUNE
+=====================================================================
+---------------------------------------------------------------------
+COMMON SETTINGS OF RUN 2
+---------------------------------------------------------------------
+Data                 Learn2Reg Lung CT, intra-patient pairs expiration (moving) -> inspiration (fixed)
+Training             17 patients (case_004-case_020) + inverted pairs = 34 pairs
+Validation           3 patients (case_001, case_002, case_003), landmark TRE in mm on the native grid
+TRE without reg.     14.65 mm (validation mean)
+Point convention     training CSVs with x,y axes flipped (LPS vs RAS) and phases _0000/_0001 swapped
+                     with respect to the images; verified with the correlation of the patches around the points
+                     (0.80 keypoints, 0.76 landmarks versus 0.07-0.28 for the previous convention).
+                     The runs before the correction (run 1) used wrongly matched points and their TREs
+                     are not comparable.
+Resolution           TRAIN_TARGET_SHAPE = (192, 192, 192)
+Batch                BATCH_SIZE = 1, NUM_WORKERS = 10, data copied to a local disk
+Model                SwinUNETR (feature_size 48, 62.2 M parameters), MONAI self-supervised weights,
+                     Conv3d head 16->3 initialized to ~0 (initial DVF = identity),
+                     stationary velocity field integrated with scaling and squaring (9 steps)
+Precision            bfloat16 (NCC in float32), gradient clipping at 1.0
+Loss                 SuperRegistrationLoss: NCC (window 7, masked on the lungs) + 0.5 x MIND,
+                     multiscale 100% and 50%; label Dice 0.4 (DIFFERENTIABLE_DICE = True);
+                     DVF smoothness, inverse consistency (lambda_inv = 0.5), landmark loss
+                     (mean error in mm) and keypoint loss (smooth L1 in mm) with linear curriculum weights
+Saving               model with the best validation TRE in best_reg_model.pth,
+                     resume checkpoint at every epoch
+
+---------------------------------------------------------------------
+HYPERPARAMETERS
+---------------------------------------------------------------------
+Start                best warmup model (13.36 mm, epoch 27)
+Trained parameters   the whole network
+Optimizer            AdamW with differential learning rate: SwinViT transformer 2e-5, rest of the
+                     network 1e-4; weight_decay = 1e-4
+Scheduler            linear warmup 5 epochs + cosine, total_epochs = 300, min_lr_ratio = 0.01
+Epochs / patience    300 / 40
+acc_steps            6 in epochs 1-43; 2 in epochs 44-49 (see below)
+Curriculum           smooth (1.0, 1.5) | landmark (0.5, 1.5) | keypoint (1.0, 2.0)
+Initial threshold    best_val = 13.36 mm (best warmup TRE)
+Augmentation         independent rigid motion on moving and fixed (p = 0.8 each, max rotation 0.05 rad,
+                     max translation 4 voxels), Y flip (p = 0.5), intensity transforms (p = 0.3 each)
+
+---------------------------------------------------------------------
+RESULTS (per-epoch detail in finetune.csv)
+---------------------------------------------------------------------
+Epochs with acc_steps = 6:
+    1-10   mean TRE  13.16 mm | best  12.49 mm | mean train loss  5.973
+   11-20   mean TRE  12.63 mm | best  12.42 mm | mean train loss  6.034
+   21-30   mean TRE  12.40 mm | best  12.21 mm | mean train loss  5.648
+   31-40   mean TRE  12.36 mm | best  12.09 mm | mean train loss  5.635
+   41-42   mean TRE  12.71 mm | best  12.43 mm | mean train loss  5.473
+
+Epochs 44-49 with acc_steps = 2:
+   44-49   mean TRE  12.92 mm | best  12.20 mm | mean train loss  5.949
+
+Best TRE             12.09 mm (epoch 33)
+Folding              0.000% in all epochs
+Note                 epoch 43 was completed but its log line is not available.
+
+---------------------------------------------------------------------
+NOTES
+---------------------------------------------------------------------
+- The jump of the train loss at the start (about 2.9 -> 6) is due to the keypoint weight going
+  from 0.5 (warmup) to 1.0, not to a deterioration.
+- The TRE drops by about 1.2 mm in the first 30 epochs, then settles around 12.4 mm
+  (best model 12.09 mm at epoch 33) while the validation similarity keeps improving.
+- Hypothesis: few updates per epoch (about 6 with batch 1 and acc_steps 6). From epoch 44
+  acc_steps was set to 2 (about 17 updates per epoch) without changing the learning rate:
+  the TRE worsened up to 13.81 mm (epoch 48) while the similarity improved. Training was
+  stopped at epoch 49.
+- Later attempts not included in the CSVs, all restarted from the 12.09 mm model:
+  FINETUNE_B (acc_steps 2, halved learning rate 1e-5 / 5e-5): 14 epochs, TRE 12.15-12.84 mm,
+  no improvement; a run with keypoints (2.0, 3.0): best model 12.02 mm, then TRE
+  rising again. Conclusion: the number of updates was not the limit.

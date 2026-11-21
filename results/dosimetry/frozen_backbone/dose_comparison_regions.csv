@@ -1,0 +1,16 @@
+evaluated_dose,region,n_voxels,gamma_3_2_pass_pct,mean_diff_pct_dmax,mean_abs_diff_pct_dmax,voxels_within_3pct
+dir_ct,dose>=10%,431752,99.46,-0.26,0.38,98.7
+dir_ct,dose>=50%,22591,99.87,-1.02,1.02,100.0
+dir_ct,dose>=80%,9131,99.68,-1.26,1.26,99.9
+dir_ct,common calculation region,,99.51,,,
+dir_ct,common region >= 3 mm from edge,,99.81,,,
+dir_cbct,dose>=10%,431752,97.87,-0.21,0.57,97.0
+dir_cbct,dose>=50%,22591,100.0,0.28,0.39,100.0
+dir_cbct,dose>=80%,9131,100.0,0.29,0.42,100.0
+dir_cbct,common calculation region,,98.48,,,
+dir_cbct,common region >= 3 mm from edge,,99.58,,,
+baseline,dose>=10%,431752,98.97,-0.36,0.62,98.2
+baseline,dose>=50%,22591,96.02,-1.39,1.42,92.3
+baseline,dose>=80%,9131,90.15,-1.59,1.63,84.4
+baseline,common calculation region,,98.98,,,
+baseline,common region >= 3 mm from edge,,99.36,,,

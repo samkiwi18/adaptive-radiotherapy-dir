@@ -1,0 +1,73 @@
+dataset,structure,criterion,n_points,pass_rate_pct
+dir_ct,GTV (real_ct),2%/2mm,4596,99.98
+dir_ct,PTV (real_ct),2%/2mm,11289,99.74
+dir_ct,Lungs-GTV (real_ct),2%/2mm,82725,99.97
+dir_ct,SpinalCord_PRV5 (real_ct),2%/2mm,4826,100.0
+dir_ct,Heart_total (real_ct),2%/2mm,1572,100.0
+dir_ct,GreatVessels (real_ct),2%/2mm,16966,100.0
+dir_ct,ChestWall (real_ct),2%/2mm,7040,100.0
+dir_ct,Ring_PTV_10-30mm (real_ct),2%/2mm,84280,100.0
+dir_ct,BODY (real_ct),2%/2mm,431752,99.46
+dir_ct,esophagus (real_ct),2%/2mm,1988,100.0
+dir_ct,trachea (real_ct),2%/2mm,2764,100.0
+dir_ct,T8 vertebra (real_ct),2%/2mm,0,
+dir_ct,T7 vertebra (real_ct),2%/2mm,0,
+dir_ct,T6 vertebra (real_ct),2%/2mm,0,
+dir_ct,T5 vertebra (real_ct),2%/2mm,3071,100.0
+dir_ct,T4 vertebra (real_ct),2%/2mm,5006,100.0
+dir_ct,T3 vertebra (real_ct),2%/2mm,2302,100.0
+dir_ct,T2 vertebra (real_ct),2%/2mm,0,
+dir_ct,left scapula (real_ct),2%/2mm,7800,100.0
+dir_ct,left clavicle (real_ct),2%/2mm,3,100.0
+dir_ct,right clavicle (real_ct),2%/2mm,0,
+dir_ct,spinal cord (real_ct),2%/2mm,1376,100.0
+dir_ct,left deep back muscle (real_ct),2%/2mm,2220,100.0
+dir_ct,right deep back muscle (real_ct),2%/2mm,376,100.0
+dir_cbct,GTV (real_ct),2%/2mm,4596,100.0
+dir_cbct,PTV (real_ct),2%/2mm,11289,100.0
+dir_cbct,Lungs-GTV (real_ct),2%/2mm,82725,100.0
+dir_cbct,SpinalCord_PRV5 (real_ct),2%/2mm,4826,100.0
+dir_cbct,Heart_total (real_ct),2%/2mm,1572,100.0
+dir_cbct,GreatVessels (real_ct),2%/2mm,16966,100.0
+dir_cbct,ChestWall (real_ct),2%/2mm,7040,100.0
+dir_cbct,Ring_PTV_10-30mm (real_ct),2%/2mm,84280,100.0
+dir_cbct,BODY (real_ct),2%/2mm,431752,97.87
+dir_cbct,esophagus (real_ct),2%/2mm,1988,100.0
+dir_cbct,trachea (real_ct),2%/2mm,2764,100.0
+dir_cbct,T8 vertebra (real_ct),2%/2mm,0,
+dir_cbct,T7 vertebra (real_ct),2%/2mm,0,
+dir_cbct,T6 vertebra (real_ct),2%/2mm,0,
+dir_cbct,T5 vertebra (real_ct),2%/2mm,3071,100.0
+dir_cbct,T4 vertebra (real_ct),2%/2mm,5006,100.0
+dir_cbct,T3 vertebra (real_ct),2%/2mm,2302,100.0
+dir_cbct,T2 vertebra (real_ct),2%/2mm,0,
+dir_cbct,left scapula (real_ct),2%/2mm,7800,100.0
+dir_cbct,left clavicle (real_ct),2%/2mm,3,100.0
+dir_cbct,right clavicle (real_ct),2%/2mm,0,
+dir_cbct,spinal cord (real_ct),2%/2mm,1376,100.0
+dir_cbct,left deep back muscle (real_ct),2%/2mm,2220,100.0
+dir_cbct,right deep back muscle (real_ct),2%/2mm,376,100.0
+baseline,GTV (real_ct),2%/2mm,4596,86.66
+baseline,PTV (real_ct),2%/2mm,11289,92.04
+baseline,Lungs-GTV (real_ct),2%/2mm,82725,99.67
+baseline,SpinalCord_PRV5 (real_ct),2%/2mm,4826,100.0
+baseline,Heart_total (real_ct),2%/2mm,1572,100.0
+baseline,GreatVessels (real_ct),2%/2mm,16966,100.0
+baseline,ChestWall (real_ct),2%/2mm,7040,100.0
+baseline,Ring_PTV_10-30mm (real_ct),2%/2mm,84280,100.0
+baseline,BODY (real_ct),2%/2mm,431752,98.97
+baseline,esophagus (real_ct),2%/2mm,1988,100.0
+baseline,trachea (real_ct),2%/2mm,2764,100.0
+baseline,T8 vertebra (real_ct),2%/2mm,0,
+baseline,T7 vertebra (real_ct),2%/2mm,0,
+baseline,T6 vertebra (real_ct),2%/2mm,0,
+baseline,T5 vertebra (real_ct),2%/2mm,3071,100.0
+baseline,T4 vertebra (real_ct),2%/2mm,5006,100.0
+baseline,T3 vertebra (real_ct),2%/2mm,2302,100.0
+baseline,T2 vertebra (real_ct),2%/2mm,0,
+baseline,left scapula (real_ct),2%/2mm,7800,99.95
+baseline,left clavicle (real_ct),2%/2mm,3,100.0
+baseline,right clavicle (real_ct),2%/2mm,0,
+baseline,spinal cord (real_ct),2%/2mm,1376,100.0
+baseline,left deep back muscle (real_ct),2%/2mm,2220,100.0
+baseline,right deep back muscle (real_ct),2%/2mm,376,100.0

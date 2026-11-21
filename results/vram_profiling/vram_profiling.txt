@@ -1,0 +1,244 @@
+Section 10 - VRAM profiling (section 9 TTO)
+===========================================
+Notebook: main.ipynb, cell executed as In[16], GPU: NVIDIA A100.
+Code state: structure masks in bfloat16, compact shifted-window mask with the efficient attention,
+held-out leftover freed in run_tto, decoder1 residual block not split (segmented_blocks=()).
+Plots: vram_per_block_<setup>.png (one per setup, in the order printed below).
+
+Compared with the L4 run (same code):
+  - memory: identical in every setup without backward. With a backward the peaks are ~508 MiB higher
+    on the A100 (e.g. efficient + checkpointing TTO 8350 -> 8858 MiB, forward + backward 7572 -> 8080),
+    while weights, gradients, Adam states and retained activations are identical. The difference is in
+    temporary buffers of the backward, most likely the cuDNN workspaces (cudnn.benchmark picks the
+    algorithms per GPU); not verified. Baselines differ by ~127 MiB (session leftovers).
+  - plots: identical to the L4 ones (they show weights and retained memory, which do not depend on the GPU).
+  - time: about 3x faster (efficient + checkpointing TTO step 3.06 -> 1.02 s, MONAI 2.33 -> 0.74 s).
+  - Step-1 losses identical to the L4 run (4.5466 MONAI, 4.5463 efficient).
+
+VRAM allocated: 2.08 GB | reserved: 2.31 GB
+Grid (448, 288, 32) | 49 structures (moving and fixed)
+
+===== MONAI =====
+
+section 9 TTO:
+   Step   1/2 | loss 4.5466 | MIND 0.0135 | lung Dice 0.1727 | tumor Dice 0.5286 | OAR Dice 0.2658 | bone Dice 0.5049 | fold 0.000% | held-out Dice 0.5151 | bone |log detJ| 0.5495
+   Step   2/2 | loss 4.2046 | MIND 0.0194 | lung Dice 0.0597 | tumor Dice 0.5607 | OAR Dice 0.2089 | bone Dice 0.4936 | fold 0.000% | held-out Dice 0.5299 | bone |log detJ| 0.2473
+
+section 9 TTO, frozen backbone:
+   Step   1/2 | loss 4.5466 | MIND 0.0135 | lung Dice 0.1727 | tumor Dice 0.5286 | OAR Dice 0.2658 | bone Dice 0.5049 | fold 0.000% | held-out Dice 0.5151 | bone |log detJ| 0.5495
+   Step   2/2 | loss 4.3915 | MIND 0.0135 | lung Dice 0.1616 | tumor Dice 0.5140 | OAR Dice 0.2538 | bone Dice 0.4915 | fold 0.000% | held-out Dice 0.5082 | bone |log detJ| 0.5071
+
+Per-block memory, inference:
+             block  calls  weights_MiB  output_MiB  retained_MiB  peak_increase_MiB  time_ms
+  backbone.swinViT      1         30.8       125.9         140.9             7156.9     96.0
+ backbone.encoder1      1          0.2       378.0         378.1             1512.2     39.1
+ backbone.encoder2      1          0.5        47.2          47.5              189.4      6.7
+ backbone.encoder3      1          1.9        11.8          12.8               48.7      1.3
+ backbone.encoder4      1          7.6         3.0           6.8               17.5      0.9
+backbone.encoder10      1        121.5         0.2          60.9               93.4      1.0
+ backbone.decoder5      1         55.7         0.7          28.6               42.3      1.8
+ backbone.decoder4      1         13.9         3.0           9.9               26.4      1.3
+ backbone.decoder3      1          3.5        11.8          13.6               73.1      1.7
+ backbone.decoder2      1          0.9        47.2          47.7              284.0      6.5
+ backbone.decoder1      1          0.8       378.0         378.4             2268.5     48.1
+      backbone.out      1          0.0       126.0         126.0              126.0      1.4
+          reg_head      1          0.0        23.6          23.6              173.3      1.9
+        integrator      1          0.0        47.2          47.2              165.4      8.0
+             other      0          0.0         0.0       -1251.0                0.0      0.0
+
+Per-block memory, forward + backward:
+             block  calls  weights_MiB  output_MiB  retained_MiB  peak_increase_MiB  time_ms
+  backbone.swinViT      1         30.8       125.9        1797.0             7318.3     95.0
+ backbone.encoder1      1          0.2       378.0        1921.6             2299.6     38.0
+ backbone.encoder2      1          0.5        47.2         236.5              283.9      6.4
+ backbone.encoder3      1          1.9        11.8          60.0               72.3      1.8
+ backbone.encoder4      1          7.6         3.0          18.6               23.4      0.9
+backbone.encoder10      1        121.5         0.2          61.7               93.7      1.0
+ backbone.decoder5      1         55.7         0.7          34.5               43.0      1.3
+ backbone.decoder4      1         13.9         3.0          27.6               30.6      1.3
+ backbone.decoder3      1          3.5        11.8          84.4               96.2      1.6
+ backbone.decoder2      1          0.9        47.2         331.2              378.4      6.4
+ backbone.decoder1      1          0.8       378.0        2646.4             3024.4     46.8
+      backbone.out      1          0.0       126.0         126.0              126.0      1.3
+          reg_head      1          0.0        23.6          23.6              173.3      1.8
+        integrator      1          0.0        47.2         897.8              945.0      7.8
+             other      0          0.0         0.0        -134.9                0.0      0.0
+
+[plot: vram_per_block_MONAI.png]
+
+===== efficient =====
+Max |velocity difference| from MONAI: 3.28e-01 (max |velocity| 16.38)
+
+section 9 TTO:
+   Step   1/2 | loss 4.5463 | MIND 0.0134 | lung Dice 0.1728 | tumor Dice 0.5288 | OAR Dice 0.2658 | bone Dice 0.5042 | fold 0.000% | held-out Dice 0.5152 | bone |log detJ| 0.5492
+   Step   2/2 | loss 4.1712 | MIND 0.0195 | lung Dice 0.0598 | tumor Dice 0.5566 | OAR Dice 0.2086 | bone Dice 0.4855 | fold 0.000% | held-out Dice 0.5229 | bone |log detJ| 0.2436
+
+section 9 TTO, frozen backbone:
+   Step   1/2 | loss 4.5463 | MIND 0.0134 | lung Dice 0.1728 | tumor Dice 0.5288 | OAR Dice 0.2658 | bone Dice 0.5042 | fold 0.000% | held-out Dice 0.5152 | bone |log detJ| 0.5492
+   Step   2/2 | loss 4.3909 | MIND 0.0135 | lung Dice 0.1617 | tumor Dice 0.5141 | OAR Dice 0.2539 | bone Dice 0.4909 | fold 0.000% | held-out Dice 0.5084 | bone |log detJ| 0.5068
+
+Per-block memory, inference:
+             block  calls  weights_MiB  output_MiB  retained_MiB  peak_increase_MiB  time_ms
+  backbone.swinViT      1         30.8       125.9         140.9             2541.8    145.9
+ backbone.encoder1      1          0.2       378.0         378.1             1512.2     38.1
+ backbone.encoder2      1          0.5        47.2          47.5              189.4      6.5
+ backbone.encoder3      1          1.9        11.8          12.8               48.7      1.3
+ backbone.encoder4      1          7.6         3.0           6.8               17.5      1.1
+backbone.encoder10      1        121.5         0.2          60.9               93.4      1.2
+ backbone.decoder5      1         55.7         0.7          28.6               42.3      1.5
+ backbone.decoder4      1         13.9         3.0           9.9               26.4      1.5
+ backbone.decoder3      1          3.5        11.8          13.6               73.1      1.7
+ backbone.decoder2      1          0.9        47.2          47.7              284.0      6.5
+ backbone.decoder1      1          0.8       378.0         378.4             2268.5     46.8
+      backbone.out      1          0.0       126.0         126.0              126.0      1.3
+          reg_head      1          0.0        23.6          23.6              173.3      1.8
+        integrator      1          0.0        47.2          47.2              165.4      7.8
+             other      0          0.0         0.0       -1251.0                0.0      0.0
+
+Per-block memory, forward + backward:
+             block  calls  weights_MiB  output_MiB  retained_MiB  peak_increase_MiB  time_ms
+  backbone.swinViT      1         30.8       125.9         730.0             2978.5    145.8
+ backbone.encoder1      1          0.2       378.0        1921.6             2299.6     38.0
+ backbone.encoder2      1          0.5        47.2         236.5              283.9      6.9
+ backbone.encoder3      1          1.9        11.8          60.0               72.3      1.2
+ backbone.encoder4      1          7.6         3.0          18.6               23.4      0.9
+backbone.encoder10      1        121.5         0.2          61.7               93.7      1.0
+ backbone.decoder5      1         55.7         0.7          34.5               43.0      1.4
+ backbone.decoder4      1         13.9         3.0          27.6               30.6      1.3
+ backbone.decoder3      1          3.5        11.8          84.4               96.2      1.6
+ backbone.decoder2      1          0.9        47.2         331.2              378.4      6.4
+ backbone.decoder1      1          0.8       378.0        2646.4             3024.4     46.8
+      backbone.out      1          0.0       126.0         126.0              126.0      1.3
+          reg_head      1          0.0        23.6          23.6              173.3      1.8
+        integrator      1          0.0        47.2         897.8              945.0      7.9
+             other      0          0.0         0.0        -134.9                0.0      0.0
+
+[plot: vram_per_block_efficient.png]
+
+===== MONAI + checkpointing =====
+Max |velocity difference| from MONAI: 0.00e+00 (max |velocity| 16.38)
+
+section 9 TTO:
+   Step   1/2 | loss 4.5466 | MIND 0.0135 | lung Dice 0.1727 | tumor Dice 0.5286 | OAR Dice 0.2658 | bone Dice 0.5049 | fold 0.000% | held-out Dice 0.5151 | bone |log detJ| 0.5495
+   Step   2/2 | loss 4.2092 | MIND 0.0195 | lung Dice 0.0598 | tumor Dice 0.5615 | OAR Dice 0.2093 | bone Dice 0.4935 | fold 0.000% | held-out Dice 0.5306 | bone |log detJ| 0.2475
+
+section 9 TTO, frozen backbone:
+   Step   1/2 | loss 4.5466 | MIND 0.0135 | lung Dice 0.1727 | tumor Dice 0.5286 | OAR Dice 0.2658 | bone Dice 0.5049 | fold 0.000% | held-out Dice 0.5151 | bone |log detJ| 0.5495
+   Step   2/2 | loss 4.3915 | MIND 0.0135 | lung Dice 0.1616 | tumor Dice 0.5140 | OAR Dice 0.2538 | bone Dice 0.4915 | fold 0.000% | held-out Dice 0.5082 | bone |log detJ| 0.5071
+
+Per-block memory, inference:
+             block  calls  weights_MiB  output_MiB  retained_MiB  peak_increase_MiB  time_ms
+  backbone.swinViT      1         30.8       125.9         140.9             7156.9     94.5
+ backbone.encoder1      1          0.2       378.0         378.1             1512.2     38.0
+ backbone.encoder2      1          0.5        47.2          47.5              189.4      6.4
+ backbone.encoder3      1          1.9        11.8          12.8               48.7      1.3
+ backbone.encoder4      1          7.6         3.0           6.8               17.5      0.9
+backbone.encoder10      1        121.5         0.2          60.9               93.4      0.9
+ backbone.decoder5      1         55.7         0.7          28.6               42.3      1.3
+ backbone.decoder4      1         13.9         3.0           9.9               26.4      1.3
+ backbone.decoder3      1          3.5        11.8          13.6               73.1      1.6
+ backbone.decoder2      1          0.9        47.2          47.7              284.0      6.4
+ backbone.decoder1      1          0.8       378.0         378.4             2268.5     50.8
+      backbone.out      1          0.0       126.0         126.0              126.0      1.3
+          reg_head      1          0.0        23.6          23.6              173.3      1.8
+        integrator      1          0.0        47.2          47.2              165.4      7.8
+             other      0          0.0         0.0       -1251.0                0.0      0.0
+
+Per-block memory, forward + backward:
+             block  calls  weights_MiB  output_MiB  retained_MiB  peak_increase_MiB  time_ms
+  backbone.swinViT      1         30.8       125.9        1797.0             7318.3     94.4
+ backbone.encoder1      1          0.2       378.0         378.1             1512.2     38.3
+ backbone.encoder2      1          0.5        47.2         236.5              283.9      6.4
+ backbone.encoder3      1          1.9        11.8          60.0               72.3      1.3
+ backbone.encoder4      1          7.6         3.0          18.6               23.4      1.0
+backbone.encoder10      1        121.5         0.2          61.7               93.7      1.0
+ backbone.decoder5      1         55.7         0.7          34.5               43.0      1.4
+ backbone.decoder4      1         13.9         3.0          27.6               30.6      1.3
+ backbone.decoder3      1          3.5        11.8          84.4               96.2      1.6
+ backbone.decoder2      1          0.9        47.2          47.7              284.0      6.7
+ backbone.decoder1      1          0.8       378.0         378.4             2268.5     47.1
+      backbone.out      1          0.0       126.0         126.0              126.0      1.3
+          reg_head      1          0.0        23.6          23.6              173.3      1.8
+        integrator      1          0.0        47.2         448.9              496.1      8.9
+             other      0          0.0         0.0        -104.3                0.0      0.0
+
+[plot: vram_per_block_MONAI_checkpointing.png]
+
+===== efficient + checkpointing =====
+Max |velocity difference| from MONAI: 3.28e-01 (max |velocity| 16.38)
+
+section 9 TTO:
+   Step   1/2 | loss 4.5463 | MIND 0.0134 | lung Dice 0.1728 | tumor Dice 0.5288 | OAR Dice 0.2658 | bone Dice 0.5042 | fold 0.000% | held-out Dice 0.5152 | bone |log detJ| 0.5492
+   Step   2/2 | loss 4.1692 | MIND 0.0195 | lung Dice 0.0598 | tumor Dice 0.5564 | OAR Dice 0.2086 | bone Dice 0.4850 | fold 0.000% | held-out Dice 0.5234 | bone |log detJ| 0.2434
+
+section 9 TTO, frozen backbone:
+   Step   1/2 | loss 4.5463 | MIND 0.0134 | lung Dice 0.1728 | tumor Dice 0.5288 | OAR Dice 0.2658 | bone Dice 0.5042 | fold 0.000% | held-out Dice 0.5152 | bone |log detJ| 0.5492
+   Step   2/2 | loss 4.3909 | MIND 0.0135 | lung Dice 0.1617 | tumor Dice 0.5141 | OAR Dice 0.2539 | bone Dice 0.4909 | fold 0.000% | held-out Dice 0.5084 | bone |log detJ| 0.5068
+
+Per-block memory, inference:
+             block  calls  weights_MiB  output_MiB  retained_MiB  peak_increase_MiB  time_ms
+  backbone.swinViT      1         30.8       125.9         140.9             2541.8    146.1
+ backbone.encoder1      1          0.2       378.0         378.1             1512.2     38.3
+ backbone.encoder2      1          0.5        47.2          47.5              189.4      7.3
+ backbone.encoder3      1          1.9        11.8          12.8               48.7      1.3
+ backbone.encoder4      1          7.6         3.0           6.8               17.5      0.9
+backbone.encoder10      1        121.5         0.2          60.9               93.4      1.0
+ backbone.decoder5      1         55.7         0.7          28.6               42.3      1.3
+ backbone.decoder4      1         13.9         3.0           9.9               26.4      1.3
+ backbone.decoder3      1          3.5        11.8          13.6               73.1      1.7
+ backbone.decoder2      1          0.9        47.2          47.7              284.0      7.0
+ backbone.decoder1      1          0.8       378.0         378.4             2268.5     46.8
+      backbone.out      1          0.0       126.0         126.0              126.0      1.3
+          reg_head      1          0.0        23.6          23.6              173.3      1.8
+        integrator      1          0.0        47.2          47.2              165.4      7.8
+             other      0          0.0         0.0       -1251.0                0.0      0.0
+
+Per-block memory, forward + backward:
+             block  calls  weights_MiB  output_MiB  retained_MiB  peak_increase_MiB  time_ms
+  backbone.swinViT      1         30.8       125.9         730.0             2978.5    145.9
+ backbone.encoder1      1          0.2       378.0         378.1             1512.2     38.5
+ backbone.encoder2      1          0.5        47.2         236.5              283.9      6.4
+ backbone.encoder3      1          1.9        11.8          60.0               72.3      1.3
+ backbone.encoder4      1          7.6         3.0          18.6               23.4      1.0
+backbone.encoder10      1        121.5         0.2          61.7               93.7      1.8
+ backbone.decoder5      1         55.7         0.7          34.5               43.0      1.4
+ backbone.decoder4      1         13.9         3.0          27.6               30.6      1.3
+ backbone.decoder3      1          3.5        11.8          84.4               96.2      1.6
+ backbone.decoder2      1          0.9        47.2          47.7              284.0      6.7
+ backbone.decoder1      1          0.8       378.0         378.4             2268.5     47.1
+      backbone.out      1          0.0       126.0         126.0              126.0      1.3
+          reg_head      1          0.0        23.6          23.6              173.3      1.8
+        integrator      1          0.0        47.2         448.9              496.1      8.3
+             other      0          0.0         0.0        -104.3                0.0      0.0
+
+[plot: vram_per_block_efficient_checkpointing.png]
+
+Summary (MiB, seconds; NaN = not measured or out of memory):
+                    setup                       scenario  peak_MiB  baseline_MiB  weights_MiB  gradients_MiB  adam_MiB  activations_MiB  forward_retained_MiB  forward_s  backward_s  step_s
+                    MONAI                      inference   9193.12       2004.72          NaN            NaN       NaN              NaN                 70.88       0.22         NaN     NaN
+                    MONAI             forward + backward  14714.70       1894.47          NaN         237.24       NaN              NaN               8132.09       0.22        0.42     NaN
+                    MONAI                  section 9 TTO  15492.40       1862.97       237.24         237.24    474.48         12917.71                   NaN        NaN         NaN    0.74
+                    MONAI section 9 TTO, frozen backbone   9456.87       1862.97       237.24           0.00      0.01          7593.89                   NaN        NaN         NaN    0.37
+                efficient                      inference   4941.13       1894.47          NaN            NaN       NaN              NaN                 70.88       0.27         NaN     NaN
+                efficient             forward + backward   9876.15       1894.47          NaN         237.24       NaN              NaN               7065.01       0.27        0.55     NaN
+                efficient                  section 9 TTO  12431.56       1862.97       237.24         237.24    474.48          9856.87                   NaN        NaN         NaN    0.92
+                efficient section 9 TTO, frozen backbone   5930.44       1862.97       237.24           0.00      0.01          4067.46                   NaN        NaN         NaN    0.42
+    MONAI + checkpointing                      inference   9082.87       1894.47          NaN            NaN       NaN              NaN                 70.88       0.22         NaN     NaN
+    MONAI + checkpointing             forward + backward  14714.70       1894.47          NaN         237.24       NaN              NaN               3618.74       0.22        1.66     NaN
+    MONAI + checkpointing                  section 9 TTO  15492.40       1862.97       237.24         237.24    474.48         12917.71                   NaN        NaN         NaN    0.84
+    MONAI + checkpointing section 9 TTO, frozen backbone   9456.87       1862.97       237.24           0.00      0.01          7593.89                   NaN        NaN         NaN    0.38
+efficient + checkpointing                      inference   4941.13       1894.47          NaN            NaN       NaN              NaN                 70.88       0.27         NaN     NaN
+efficient + checkpointing             forward + backward   8080.08       1894.47          NaN         237.24       NaN              NaN               2551.66       0.27        0.64     NaN
+efficient + checkpointing                  section 9 TTO   8857.77       1862.97       237.24         237.24    474.48          6283.09                   NaN        NaN         NaN    1.02
+efficient + checkpointing section 9 TTO, frozen backbone   5481.56       1862.97       237.24           0.00      0.01          3618.58                   NaN        NaN         NaN    0.43
+
+TTO peak per phase (MiB):
+                    setup                       scenario  network_forward_peak_MiB  losses_peak_MiB  network_backward_peak_MiB  optimizer_peak_MiB  other_peak_MiB
+                    MONAI                  section 9 TTO                   10931.4          13498.6                    15492.4              3217.5          3878.0
+                    MONAI section 9 TTO, frozen backbone                    9456.9           5930.4                     3386.8              2268.6          3166.3
+                efficient                  section 9 TTO                    9864.3          12431.6                    10653.8              3217.5          3878.0
+                efficient section 9 TTO, frozen backbone                    5197.4           5930.4                     3386.8              2268.6          3166.3
+    MONAI + checkpointing                  section 9 TTO                   10092.9           8986.2                    15492.4              3217.5          3878.0
+    MONAI + checkpointing section 9 TTO, frozen backbone                    9456.9           5481.6                     2985.2              2268.6          3166.3
+efficient + checkpointing                  section 9 TTO                    6722.1           7919.2                     8857.8              3217.5          3878.0
+efficient + checkpointing section 9 TTO, frozen backbone                    5197.4           5481.6                     2985.2              2268.6          3166.3

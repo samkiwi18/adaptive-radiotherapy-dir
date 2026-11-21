@@ -1,0 +1,98 @@
+=====================================================================
+RUN 2 - FINETUNE_E (wider shared augmentation) + TTO on the validation patients
+=====================================================================
+---------------------------------------------------------------------
+COMMON SETTINGS OF RUN 2
+---------------------------------------------------------------------
+Data                 Learn2Reg Lung CT, intra-patient pairs expiration (moving) -> inspiration (fixed)
+Training             17 patients (case_004-case_020) + inverted pairs = 34 pairs
+Validation           3 patients (case_001, case_002, case_003), landmark TRE in mm on the native grid
+TRE without reg.     14.65 mm (validation mean)
+Point convention     training CSVs with x,y axes flipped (LPS vs RAS) and phases _0000/_0001 swapped
+                     with respect to the images; verified with the correlation of the patches around the points
+                     (0.80 keypoints, 0.76 landmarks versus 0.07-0.28 for the previous convention).
+                     The runs before the correction (run 1) used wrongly matched points and their TREs
+                     are not comparable.
+Resolution           TRAIN_TARGET_SHAPE = (192, 192, 192)
+Batch                BATCH_SIZE = 1, NUM_WORKERS = 10, data copied to a local disk
+Model                SwinUNETR (feature_size 48, 62.2 M parameters), MONAI self-supervised weights,
+                     Conv3d head 16->3 initialized to ~0 (initial DVF = identity),
+                     stationary velocity field integrated with scaling and squaring (9 steps)
+Precision            bfloat16 (NCC in float32), gradient clipping at 1.0
+Loss                 SuperRegistrationLoss: NCC (window 7, masked on the lungs) + 0.5 x MIND,
+                     multiscale 100% and 50%; label Dice 0.4 (DIFFERENTIABLE_DICE = True);
+                     DVF smoothness, inverse consistency (lambda_inv = 0.5), landmark loss
+                     (mean error in mm) and keypoint loss (smooth L1 in mm) with linear curriculum weights
+Saving               model with the best validation TRE in best_reg_model.pth,
+                     resume checkpoint at every epoch
+
+---------------------------------------------------------------------
+MOTIVATION
+---------------------------------------------------------------------
+After FINETUNE_D the network fits the training set (41%) but does not generalize (20% in validation).
+With the shared rigid motion, wider rotations and translations add no fake motion:
+they only increase the variety of poses seen by the network. Only change with respect to FINETUNE_D.
+
+---------------------------------------------------------------------
+HYPERPARAMETERS
+---------------------------------------------------------------------
+Start                best FINETUNE_D model (11.86 mm, epoch 23)
+Trained parameters   the whole network
+Optimizer            AdamW with differential learning rate: SwinViT transformer 1e-5, rest 5e-5;
+                     weight_decay = 1e-4
+Scheduler            linear warmup 3 epochs + cosine, total_epochs = 300, min_lr_ratio = 0.01
+Epochs / patience    300 / 40 (stopped at epoch 30 for the diagnostic)
+acc_steps            6
+Curriculum           smooth (1.05, 1.5) | landmark (0.6, 1.5) | keypoint (2.1, 3.0)
+                     (resumed from the values reached at epoch 30 of FINETUNE_D)
+Initial threshold    best_val = 11.86 mm
+Augmentation         aug_same_affine = True, aug_max_rot = 0.10 rad, aug_max_trans_vox = 8.0;
+                     rigid motion p 0.8, flip 0.5, intensity 0.3
+
+---------------------------------------------------------------------
+RESULTS (per-epoch detail in finetune_E.csv)
+---------------------------------------------------------------------
+    1-10   mean TRE  12.10 mm | best  12.01 mm | mean train loss  5.380
+   11-20   mean TRE  12.07 mm | best  11.91 mm | mean train loss  5.236
+   21-30   mean TRE  12.05 mm | best  11.85 mm | mean train loss  5.163
+
+Best TRE             11.85 mm (epoch 26)  (0.01 mm below the starting point: within the noise)
+Train loss           5.4656 -> 5.2871 (about -6%, versus -31% for FINETUNE_D)
+Validation loss      stable around 0.035-0.040
+Folding              0.000% in all epochs
+
+Diagnostic after 30 epochs (11.85 mm model), identity -> network:
+  TRAINING    case_004  5.96 ->  4.05 (32%)   case_005 14.44 ->  8.39 (42%)   case_006 13.86 ->  9.72 (30%)
+              case_007  8.08 ->  4.86 (40%)   case_008 14.06 ->  6.22 (56%)   case_009 16.69 ->  8.79 (47%)
+              case_010  7.75 ->  5.19 (33%)   case_011  8.37 ->  4.93 (41%)   case_012 11.63 ->  7.23 (38%)
+              case_013  7.61 ->  4.84 (36%)   case_014 10.01 ->  5.22 (48%)   case_015  9.54 ->  4.09 (57%)
+              case_016  3.87 ->  2.27 (41%)   case_017 22.09 -> 11.32 (49%)   case_018  4.11 ->  2.68 (35%)
+              case_019 18.56 ->  9.06 (51%)   case_020  6.93 ->  4.86 (30%)
+              mean reduction 42%
+  VALIDATION  case_001 20.24 -> 18.61 (8%)    case_002 16.51 -> 11.73 (29%)   case_003  9.60 ->  7.23 (25%)
+              mean reduction 21%
+
+Conclusion on training: no generalization gain with respect to FINETUNE_D. With 17 training patients
+the network stops around 11.85 mm; going further would need a structural change
+(for example two-stage registration for the large displacements of case 001).
+
+---------------------------------------------------------------------
+TTO ON THE VALIDATION PATIENTS (from the 11.85 mm model)
+---------------------------------------------------------------------
+Configuration        TTOConfig(lr = 5e-3, lambda_lung = (1.5, 1.0)); default values: 150 steps,
+                     local fit from step 100, lambda_reg = 0.01, lambda_kp = 0.1, backbone not
+                     frozen; no LCC mask and no tumor weighting; grid 192^3.
+                     The landmarks are not used by the TTO: the TRE is an independent measure.
+
+Patient      no registration  network     network+TTO  lung Dice (network -> TTO)   final folding
+case_001        20.18 mm      18.72 mm     2.64 mm        0.7853 -> 0.9481              3.83%
+case_002        15.60 mm      10.34 mm     3.29 mm        0.9142 -> 0.9820              3.12%
+case_003         8.14 mm       6.48 mm     2.91 mm        0.8675 -> 0.9755              8.72%
+MEAN            14.64 mm      11.85 mm     2.94 mm
+
+Notes
+- The TTO reduces the TRE by 80% with respect to no registration, also on case 001.
+- The folding (percentage of voxels with det(J) <= 0, computed on the whole volume) is too high
+  for clinical use: with lambda_reg = 0.01 the regularization in the TTO is effectively absent.
+- Next step: TTO with lambda_reg in (0.01, 0.5, 2.0), measuring TRE and folding on the whole
+  volume and inside the lungs (section 7 of the notebook).

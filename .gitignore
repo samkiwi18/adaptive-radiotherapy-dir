@@ -1,0 +1,66 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+.venv/
+venv/
+.ruff_cache/
+.pytest_cache/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Data, patient files and outputs of the notebook
+data/*
+!data/README.md
+outputs/
+*.dcm
+*.nii
+*.nii.gz
+*.mha
+*.mhd
+*.raw
+*.nrrd
+*.npy
+*.npz
+
+# Weights and caches
+*.pth
+*.pt
+*.ckpt
+*.pickle
+*.pkl
+
+# MATLAB / Octave
+*.asv
+*.mat
+*.mex*
+octave-workspace
+
+# LaTeX
+*.aux
+*.bbl
+*.blg
+*.fdb_latexmk
+*.fls
+*.log
+*.nav
+*.out
+*.snm
+*.synctex.gz
+*.toc
+*.vrb
+*.lof
+*.lot
+
+# Documents: compiled PDFs (figures are kept as PNG)
+*.pdf
+
+# Archives and editors
+*.zip
+*.tar.gz
+.DS_Store
+.vscode/
+.idea/

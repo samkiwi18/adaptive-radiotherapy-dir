@@ -1,0 +1,200 @@
+===============================================================================
+ TREATMENT PLAN REPORT - LUNG SBRT (matRad)
+===============================================================================
+Patient file        : patient_real_ct.mat
+Planning system     : matRad 3.2.3 (plan built and tested in GNU Octave 8.4)
+Pipeline script     : compute_dose.m
+Report date         : 2026-10-03
+
+
+1. PRESCRIPTION
+-------------------------------------------------------------------------------
+Site                : left lung, peripheral lesion in contact with the chest wall
+Schedule            : 60 Gy in 8 fractions (7.5 Gy/fraction)
+                      BED10 = 105 Gy
+                      (UK SABR Consortium schedule for central / chest-wall
+                      adjacent lung tumours)
+Prescription        : D95%(PTV) = 60 Gy (100%)
+Normalization       : after leaf sequencing, weights scaled so that
+                      PTV D95% = 60 Gy (normalization factor 1.0742)
+Planning aims       : PTV D99%  >= 90% of prescription (54 Gy)
+                      Dmax 110-140% of prescription, located inside the GTV
+                      Dose > 105% of prescription confined to the PTV
+
+
+2. IMAGING AND DOSE CALCULATION
+-------------------------------------------------------------------------------
+CT cube             : 288 x 448 x 32 voxels
+CT voxel size       : 0.9766 x 0.9766 x 3.0 mm
+Machine             : matRad "Generic" photon machine, 6 MV, SAD 1000 mm
+Dose engine         : SVDPB (singular value decomposed pencil beam),
+                      heterogeneity correction via radiological depth,
+                      matRad default HU-to-density table
+Dose grid           : 3 x 3 x 3 mm (optimization and final dose)
+                      dose reported on the CT grid by interpolation
+Optimized quantity  : physical dose
+Biological model    : none
+Scenario            : nominal (no robust optimization)
+
+
+3. BEAM ARRANGEMENT
+-------------------------------------------------------------------------------
+Technique           : coplanar step-and-shoot IMRT
+Number of beams     : 9
+Gantry angles       : 0, 25, 50, 75, 100, 125, 150, 175, 200 deg
+                      (matRad convention: 0 = AP, 90 = left lateral, 180 = PA)
+Couch angles        : 0 deg for all beams
+Rationale           : ipsilateral beam fan over ~200 deg; no entry through the
+                      contralateral lung or through the heart; 25 deg spacing
+                      avoids exactly opposed beam pairs
+Isocenter           : [61.9, 29.2, 1.9] mm (patient/DICOM coordinates),
+                      identical for all beams and for all anatomies
+                      (real_ct, baseline, dir_cbct, dir_ct); located inside the GTV,
+                      about 2 mm from its posterior border
+                      (GTV centroid in this CT: [63.1, 19.6, 2.3] mm)
+Bixel width         : 5 mm (standard MLC leaf width)
+Total bixels        : 1029
+
+Beam    Gantry   Bixels   Weight share
+  1        0       114        4.9 %
+  2       25       117        8.2 %
+  3       50       120       13.7 %
+  4       75       111       15.5 %
+  5      100       111       16.4 %
+  6      125       116       16.8 %
+  7      150       113       10.2 %
+  8      175       112        6.8 %
+  9      200       115        7.5 %
+
+
+4. STRUCTURES
+-------------------------------------------------------------------------------
+Name                     Type    Priority   Volume (cc)   Definition
+GTV                      TARGET     1           13.2      original contour
+PTV                      TARGET     1           32.3      GTV + 5 mm (in-plane 5 mm,
+                                                          cranio-caudal 3 mm due to
+                                                          3 mm slice spacing)
+Lungs GTV                OAR        2         1474.1      both lungs minus GTV
+SpinalCord PRV5          OAR        2           35.8      spinal cord + 5 mm
+Heart total              OAR        2          113.1      original contour
+GreatVessels             OAR        2          142.5      original contour
+ChestWall                OAR        2          164.2      ribs + sternum + costal
+                                                          cartilage (0.45 cc
+                                                          overlap with PTV)
+esophagus                OAR        2           13.8      original contour
+trachea                  OAR        2           17.1      original contour
+Ring PTV 0 10mm          OAR        2           79.0      shell 0-10 mm around PTV,
+                                                          inside BODY (helper)
+Ring PTV 10 30mm         OAR        2          349.2      shell 10-30 mm around PTV,
+                                                          inside BODY (helper)
+BODY                     OAR        4         8060.8      external contour
+Other OARs (T2-T8 vertebrae, scapula, clavicles, spinal cord, deep back
+muscles): priority 2, no objectives.
+
+Changes with respect to the original structure set:
+ - Only GTV and PTV are TARGET; "Lungs GTV", "GreatVessels" and the ring were
+   TARGET with a default 30 Gy squared-deviation objective, now OAR.
+ - "Ring PTV 10 30mm" was a filled PTV + 30 mm volume (PTV included); rebuilt
+   as a true 10-30 mm shell.
+ - "Ring PTV 0 10mm" added as optimization helper.
+ - Ring priorities set to 2 (same as the lungs): with lower priority the lung
+   voxels were removed from the ring objectives and the dose fall-off in lung
+   was not controlled.
+
+
+5. OPTIMIZATION
+-------------------------------------------------------------------------------
+Optimizer           : IPOPT (matRad fluence optimization)
+Objective doses     : total dose over 8 fractions
+Overlap handling    : voxels shared by structures are assigned to the one with
+                      the higher priority (lower number)
+
+Structure            Objective                          Dose ref       Penalty
+GTV                  Squared underdosing                64 Gy            500
+GTV                  Squared overdosing                 79 Gy            300
+PTV                  Squared underdosing                60 Gy           1000
+PTV                  Min DVH (V60Gy >= 95%)             60 Gy, 95%      2000
+PTV                  Squared overdosing                 75 Gy            400
+Ring PTV 0 10mm      Squared overdosing                 50 Gy            300
+Ring PTV 0 10mm      Squared overdosing                 61 Gy           2000
+Ring PTV 10 30mm     Squared overdosing                 28 Gy            400
+BODY                 Squared overdosing                 18 Gy            200
+SpinalCord PRV5      Squared overdosing                 28 Gy            500
+esophagus            Squared overdosing                 35 Gy            300
+trachea              Squared overdosing                 38 Gy            300
+Heart total          Squared overdosing                 40 Gy            300
+GreatVessels         Squared overdosing                 54 Gy            300
+ChestWall            Squared overdosing                 50 Gy            100
+ChestWall            Max DVH (V30Gy <= 15%)             30 Gy, 15%       100
+Lungs GTV            Max DVH (V20Gy <= 8%)              20 Gy, 8%        300
+Lungs GTV            Mean dose                           5 Gy            100
+
+Leaf sequencing     : Siochi algorithm, 7 intensity levels (~120 segments)
+Relative change of weights after sequencing: 0.089
+
+
+6. PLAN EVALUATION (total dose, 3 mm dose grid, after normalization)
+-------------------------------------------------------------------------------
+6.1 Target - ICRU 91 reporting
+  PTV   D98% 58.3 Gy | D95% 60.0 Gy | D50% 69.5 Gy | D2% 77.9 Gy
+        D99% 57.2 Gy | Dmax (0.03 cc) 80.2 Gy (134%)
+  GTV   D98% 66.8 Gy | D50% 71.4 Gy | Dmean 71.7 Gy
+  Global Dmax located inside the GTV
+  Homogeneity index (D2-D98)/D50 = 0.28
+
+6.2 Target and conformity - UK SABR Consortium v6.1
+  Criterion                               Limit                   Plan
+  PTV D95%                                >= 60 Gy                60.0 Gy
+  PTV D99%                                >= 54 Gy (90%)          57.2 Gy
+  Dmax                                    110-140%                134%
+  R100 = V100%/V_PTV (PTV 20-40 cc)       <= 1.10 (tol. 1.20)     0.96
+  Paddick conformity index                -                       0.94
+  R50  = V50%/V_PTV (PTV 20-40 cc)        <= 5.5 (tol. 6.5)       3.46
+  Gradient index V50%/V100%               -                       3.58
+  Dmax > 2 cm from PTV (5-8 fx)           < 37.8 Gy               32.4 Gy (54%)
+  Dmax in BODY outside PTV                -                       105%
+
+6.3 Organs at risk - UK 2022 consensus, 8 fractions (mandatory limits)
+  Organ                Metric      Limit                      Plan
+  SpinalCord PRV5      D0.035cc    <= 32 Gy                   18.9 Gy
+  esophagus            D0.1cc      <= 40 Gy                   15.6 Gy
+  trachea              D0.1cc      <= 40 Gy                   13.2 Gy
+  Heart total          D0.1cc      <= 46 Gy                   23.6 Gy
+  GreatVessels         D0.1cc      <= 60 Gy opt / 65 Gy       34.7 Gy
+  Lungs GTV            V20Gy       <= 10% opt / 15%           9.1 %
+  Lungs GTV            Dmean       <= 8 Gy                    6.4 Gy
+  Lungs GTV            V5Gy        -                          32.4 %
+  Skin (3 mm BODY shell, not contoured)
+                       D0.1cc      <= 48 Gy                   ~20 Gy
+  ChestWall            D0.1cc      no 8-fraction limit        67.8 Gy
+                       V30Gy       -                          3.7 cc
+  ChestWall dose is driven by the 0.45 cc overlap with the PTV.
+
+
+7. REFERENCES FOR THE CRITERIA
+-------------------------------------------------------------------------------
+ - ICRU Report 91 (2017): prescribing, recording and reporting of stereotactic
+   treatments with small photon beams (D98%, D50%, D2%, conformity and
+   gradient indices).
+ - UK SABR Consortium Guidelines v6.1 (2019): lung fractionation, PTV coverage,
+   dose heterogeneity, R100, R50, maximum dose 2 cm from the PTV.
+   https://www.sabr.org.uk/wp-content/uploads/2019/04/SABRconsortium-guidelines-2019-v6.1.0.pdf
+ - Hawkins et al., UK 2022 consensus on normal tissue dose-volume constraints
+   for SABR, Clinical Oncology 2022 (Table 2, thoracic constraints).
+   OAR values to be checked against the original table before citation.
+ - IAEA: no dedicated lung SBRT constraint set; IAEA guidance refers to ICRU
+   for prescribing and reporting.
+
+
+8. NOTES AND LIMITATIONS
+-------------------------------------------------------------------------------
+ - Plan computed with the pencil beam engine (SVDPB); in lung, pencil beam
+   algorithms are less accurate than convolution/superposition or Monte Carlo,
+   especially in the penumbra and at lung-tumour interfaces.
+ - Dose grid 3 mm; ICRU 91 / AAPM recommend <= 2 mm for SBRT. If the final
+   dose is recomputed at 2 mm, the values in section 6 change slightly.
+ - Numbers refer to the run in GNU Octave; MATLAB may give slightly different
+   weights (floating point, optimizer stopping point).
+ - Before rerunning compute_dose.m delete plan_reference.mat and *_dose.mat
+   (or set forceReoptimization / forceRecalculation to true).
+===============================================================================

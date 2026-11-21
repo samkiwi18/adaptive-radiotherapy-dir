@@ -1,0 +1,45 @@
+8. Automatic keypoint extraction
+================================
+Notebook: main.ipynb, cell executed as In[12], GPU: NVIDIA A100.
+Keypoints saved in KP_OUT_DIR (native voxels, test point convention).
+Extraction: Förstner corners only inside the moving lung mask (network grid, eroded by 2 voxels),
+min_distance=4, sigma_deriv=1.0, sigma_int=2.0; NCC block matching on the fixed image.
+Plots: keypoints of the last pair (LungCT_0030) on the network grid 192x192x192, moving image.
+
+Description (notebook markdown):
+Förstner corners on the moving image and NCC block matching on the fixed one, for the test pairs. Points are saved with the same file convention the dataset uses when reading them.
+
+Code:
+if RUN_KEYPOINT_EXTRACTION:
+    ds_kp = Learn2RegDataset(TEST_IMG_DIR, TEST_MSK_DIR, TEST_LM_DIR, KP_OUT_DIR,
+                             target_shape=TRAIN_TARGET_SHAPE, **TEST_POINT_CONVENTION)
+    last_kp, last_moving = extract_dataset_keypoints(ds_kp, KP_OUT_DIR, device)
+    if last_moving is not None:
+        plot_keypoint_coverage(last_kp, last_moving)
+
+Output:
+LungCT_0021_0001_to_LungCT_0021_0000: 235 corners -> 230 matches (mean NCC 0.68)
+[Keypoints] 230 pairs saved: KP_OUT_DIR/LungCT_0021_0001.csv <-> KP_OUT_DIR/LungCT_0021_0000.csv
+LungCT_0022_0001_to_LungCT_0022_0000: 468 corners -> 460 matches (mean NCC 0.72)
+[Keypoints] 460 pairs saved: KP_OUT_DIR/LungCT_0022_0001.csv <-> KP_OUT_DIR/LungCT_0022_0000.csv
+LungCT_0023_0001_to_LungCT_0023_0000: 279 corners -> 277 matches (mean NCC 0.70)
+[Keypoints] 277 pairs saved: KP_OUT_DIR/LungCT_0023_0001.csv <-> KP_OUT_DIR/LungCT_0023_0000.csv
+LungCT_0024_0001_to_LungCT_0024_0000: 249 corners -> 249 matches (mean NCC 0.74)
+[Keypoints] 249 pairs saved: KP_OUT_DIR/LungCT_0024_0001.csv <-> KP_OUT_DIR/LungCT_0024_0000.csv
+LungCT_0025_0001_to_LungCT_0025_0000: 355 corners -> 328 matches (mean NCC 0.68)
+[Keypoints] 328 pairs saved: KP_OUT_DIR/LungCT_0025_0001.csv <-> KP_OUT_DIR/LungCT_0025_0000.csv
+LungCT_0026_0001_to_LungCT_0026_0000: 352 corners -> 286 matches (mean NCC 0.67)
+[Keypoints] 286 pairs saved: KP_OUT_DIR/LungCT_0026_0001.csv <-> KP_OUT_DIR/LungCT_0026_0000.csv
+LungCT_0027_0001_to_LungCT_0027_0000: 302 corners -> 265 matches (mean NCC 0.75)
+[Keypoints] 265 pairs saved: KP_OUT_DIR/LungCT_0027_0001.csv <-> KP_OUT_DIR/LungCT_0027_0000.csv
+LungCT_0028_0001_to_LungCT_0028_0000: 248 corners -> 238 matches (mean NCC 0.83)
+[Keypoints] 238 pairs saved: KP_OUT_DIR/LungCT_0028_0001.csv <-> KP_OUT_DIR/LungCT_0028_0000.csv
+LungCT_0029_0001_to_LungCT_0029_0000: 284 corners -> 284 matches (mean NCC 0.72)
+[Keypoints] 284 pairs saved: KP_OUT_DIR/LungCT_0029_0001.csv <-> KP_OUT_DIR/LungCT_0029_0000.csv
+LungCT_0030_0001_to_LungCT_0030_0000: 289 corners -> 286 matches (mean NCC 0.72)
+[Keypoints] 286 pairs saved: KP_OUT_DIR/LungCT_0030_0001.csv <-> KP_OUT_DIR/LungCT_0030_0000.csv
+286 keypoints | volume (192, 192, 192) | axial axis: column 2
+
+[plot: section8_keypoint_density_LungCT_0030.png]
+
+[plot: section8_keypoint_overlay_LungCT_0030.png]

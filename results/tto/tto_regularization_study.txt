@@ -1,0 +1,88 @@
+7. TTO regularization study: TRE vs folding
+===========================================
+Notebook: main.ipynb, cell executed as In[11], GPU: NVIDIA A100.
+
+Description (notebook markdown):
+The earlier 150-step TTO with `lambda_reg=0.01` reaches ~3 mm but leaves 3-9% of the voxels with $\det(J) \le 0$. The TTO of section 6 (`EVAL_TTO_CFG`, 60 steps, backbone optimized) is repeated on the validation and test patients with landmarks of section 6 with increasing smoothness weight, measuring TRE and folding both on the whole volume and inside the lungs, to find the weight that removes folding with the smallest TRE cost. The means are given per group: the weight should be chosen on the validation patients, so that the test patients stay an independent check.
+
+Code:
+require("tre_cases", "EVAL_TTO_CFG", hint="run sections 3 and 6 first")
+
+
+def tto_eval(dataset, i, cfg):
+    batch = custom_collate([dataset[i]])
+    run_tto(model, warp_layer, integrator, batch, device, WEIGHTS_PATH, cfg)
+    res = evaluate_registration(model, warp_layer, integrator, batch, device)
+    det = jacobian_map(res["dvf"][0].cpu().numpy())
+    lung = batch["label_fixed"][0, 0].numpy() > 0.5
+    return batch["case_name"][0], res["tre"][0], (det <= 0).mean() * 100, (det[lung] <= 0).mean() * 100
+
+REG_WEIGHTS = (0.01, 0.5, 2.0)
+rows = []
+for lam in REG_WEIGHTS:
+    for group, dataset, i in tre_cases:
+        cfg = replace(EVAL_TTO_CFG, lambda_reg=lam, log_every=1000)
+        rows.append((lam, group, *tto_eval(dataset, i, cfg)))
+
+print(f"\n{'lambda_reg':>10s} | {'group':10s} | {'patient':40s} | {'TRE':>6s} | {'fold all':>8s} | {'fold lung':>9s}")
+for lam, group, name, tre, f_all, f_lung in rows:
+    print(f"{lam:10.2f} | {group:10s} | {name:40s} | {tre:6.2f} | {f_all:7.2f}% | {f_lung:8.2f}%")
+for lam in REG_WEIGHTS:
+    for group in ("validation", "test"):
+        sel = [r for r in rows if r[0] == lam and r[1] == group]
+        if sel:
+            label = f"MEAN ({len(sel)} patients)"
+            print(f"{lam:10.2f} | {group:10s} | {label:40s} | {np.mean([r[3] for r in sel]):6.2f} | "
+                  f"{np.mean([r[4] for r in sel]):7.2f}% | {np.mean([r[5] for r in sel]):8.2f}%")
+
+Output:
+   Step   1/120 | loss 1.5049 | MIND 0.3495 | lung Dice 0.2124 | tumor Dice 0.0000 | OAR Dice 0.0000 | bone Dice 0.0000 | fold 0.000%
+   [TTO] step 90: switching to the local fit (residual weights 1.00-4.00)
+   Step 120/120 | loss 0.2539 | MIND 0.0682 | lung Dice 0.1094 | tumor Dice 0.0000 | OAR Dice 0.0000 | bone Dice 0.0000 | fold 4.208%
+   case_001_exp_to_case_001_insp: Dice 0.9110 | TRE 2.75 mm
+   Step   1/120 | loss 0.8326 | MIND 0.1831 | lung Dice 0.0859 | tumor Dice 0.0000 | OAR Dice 0.0000 | bone Dice 0.0000 | fold 0.000%
+   [TTO] step 90: switching to the local fit (residual weights 1.00-4.00)
+   Step 120/120 | loss 0.1576 | MIND 0.0693 | lung Dice 0.0206 | tumor Dice 0.0000 | OAR Dice 0.0000 | bone Dice 0.0000 | fold 1.293%
+   case_002_exp_to_case_002_insp: Dice 0.9792 | TRE 3.38 mm
+   Step   1/120 | loss 0.8590 | MIND 0.3580 | lung Dice 0.1315 | tumor Dice 0.0000 | OAR Dice 0.0000 | bone Dice 0.0000 | fold 0.000%
+   [TTO] step 90: switching to the local fit (residual weights 1.00-4.00)
+   Step 120/120 | loss 0.1878 | MIND 0.0437 | lung Dice 0.0269 | tumor Dice 0.0000 | OAR Dice 0.0000 | bone Dice 0.0000 | fold 11.202%
+   case_003_exp_to_case_003_insp: Dice 0.9715 | TRE 3.08 mm
+   Step   1/120 | loss 1.5226 | MIND 0.3495 | lung Dice 0.2124 | tumor Dice 0.0000 | OAR Dice 0.0000 | bone Dice 0.0000 | fold 0.000%
+   [TTO] step 90: switching to the local fit (residual weights 1.00-4.00)
+   Step 120/120 | loss 0.3494 | MIND 0.0575 | lung Dice 0.1513 | tumor Dice 0.0000 | OAR Dice 0.0000 | bone Dice 0.0000 | fold 0.010%
+   case_001_exp_to_case_001_insp: Dice 0.8799 | TRE 2.28 mm
+   Step   1/120 | loss 0.8549 | MIND 0.1831 | lung Dice 0.0859 | tumor Dice 0.0000 | OAR Dice 0.0000 | bone Dice 0.0000 | fold 0.000%
+   [TTO] step 90: switching to the local fit (residual weights 1.00-4.00)
+   Step 120/120 | loss 0.2574 | MIND 0.0898 | lung Dice 0.0408 | tumor Dice 0.0000 | OAR Dice 0.0000 | bone Dice 0.0000 | fold 0.040%
+   case_002_exp_to_case_002_insp: Dice 0.9623 | TRE 3.52 mm
+   Step   1/120 | loss 0.8758 | MIND 0.3580 | lung Dice 0.1315 | tumor Dice 0.0000 | OAR Dice 0.0000 | bone Dice 0.0000 | fold 0.000%
+   [TTO] step 90: switching to the local fit (residual weights 1.00-4.00)
+   Step 120/120 | loss 0.2941 | MIND 0.0933 | lung Dice 0.0725 | tumor Dice 0.0000 | OAR Dice 0.0000 | bone Dice 0.0000 | fold 7.204%
+   case_003_exp_to_case_003_insp: Dice 0.9024 | TRE 3.12 mm
+   Step   1/120 | loss 1.5770 | MIND 0.3495 | lung Dice 0.2124 | tumor Dice 0.0000 | OAR Dice 0.0000 | bone Dice 0.0000 | fold 0.000%
+   [TTO] step 90: switching to the local fit (residual weights 1.00-4.00)
+   Step 120/120 | loss 0.5293 | MIND 0.0971 | lung Dice 0.1468 | tumor Dice 0.0000 | OAR Dice 0.0000 | bone Dice 0.0000 | fold 0.006%
+   case_001_exp_to_case_001_insp: Dice 0.8493 | TRE 3.32 mm
+   Step   1/120 | loss 0.9231 | MIND 0.1831 | lung Dice 0.0859 | tumor Dice 0.0000 | OAR Dice 0.0000 | bone Dice 0.0000 | fold 0.000%
+   [TTO] step 90: switching to the local fit (residual weights 1.00-4.00)
+   Step 120/120 | loss 0.3025 | MIND 0.0868 | lung Dice 0.0516 | tumor Dice 0.0000 | OAR Dice 0.0000 | bone Dice 0.0000 | fold 0.003%
+   case_002_exp_to_case_002_insp: Dice 0.9547 | TRE 3.42 mm
+   Step   1/120 | loss 0.9272 | MIND 0.3580 | lung Dice 0.1315 | tumor Dice 0.0000 | OAR Dice 0.0000 | bone Dice 0.0000 | fold 0.000%
+   [TTO] step 90: switching to the local fit (residual weights 1.00-4.00)
+   Step 120/120 | loss 0.4155 | MIND 0.0990 | lung Dice 0.0739 | tumor Dice 0.0000 | OAR Dice 0.0000 | bone Dice 0.0000 | fold 0.185%
+   case_003_exp_to_case_003_insp: Dice 0.8974 | TRE 3.40 mm
+
+lambda_reg | group      | patient                                  |    TRE | fold all | fold lung
+      0.01 | validation | case_001_exp_to_case_001_insp            |   2.75 |    4.54% |     0.84%
+      0.01 | validation | case_002_exp_to_case_002_insp            |   3.38 |    1.34% |     0.88%
+      0.01 | validation | case_003_exp_to_case_003_insp            |   3.08 |   11.98% |     1.27%
+      0.50 | validation | case_001_exp_to_case_001_insp            |   2.28 |    0.01% |     0.00%
+      0.50 | validation | case_002_exp_to_case_002_insp            |   3.52 |    0.02% |     0.00%
+      0.50 | validation | case_003_exp_to_case_003_insp            |   3.12 |    6.58% |     0.27%
+      2.00 | validation | case_001_exp_to_case_001_insp            |   3.32 |    0.01% |     0.00%
+      2.00 | validation | case_002_exp_to_case_002_insp            |   3.42 |    0.00% |     0.00%
+      2.00 | validation | case_003_exp_to_case_003_insp            |   3.40 |    0.14% |     0.00%
+      0.01 | validation | MEAN (3 patients)                        |   3.07 |    5.95% |     1.00%
+      0.50 | validation | MEAN (3 patients)                        |   2.98 |    2.20% |     0.09%
+      2.00 | validation | MEAN (3 patients)                        |   3.38 |    0.05% |     0.00%

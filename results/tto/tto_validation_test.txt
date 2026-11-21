@@ -1,0 +1,213 @@
+6. TTO on the validation and test patients
+==========================================
+Notebook: main.ipynb, cell executed as In[12], GPU: NVIDIA A100.
+
+Description (notebook markdown):
+For each patient: error without registration, with the network alone and with network + Test-Time Optimization (`EVAL_TTO_CFG`: 120 steps, global fit for 90 then local fit for 30, `lr=5e-3`, lung Dice weights (1.5, 1.0), `lambda_reg=0.5` chosen with section 7, backbone optimized together with the head, without LCC and tumor masks), plus the folding of the TTO DVF. The validation patients are evaluated with the TRE on the landmarks, which the TTO never uses. The Learn2Reg test patients have no landmarks, so they are evaluated with the error on the keypoints (mean distance in mm on the network grid, as in section 5); for them the keypoints are removed from the TTO input, so that the error stays an independent measure. `lambda_reg` is chosen on the validation patients only: the test keypoint error is an independent check of that choice. The test pairs are resampled to the training grid and cached like the training ones.
+
+Code:
+require("ds_val", "val_idx", hint="run section 3 with RUN_TRAINING = True")
+
+EVAL_TTO_CFG = TTOConfig(n_steps=120, switch_step=90, lr=5e-3, freeze_backbone=False, lambda_lung=(1.5, 1.0),
+                         lambda_reg=0.5)
+
+def keypoint_error(dvf, batch):
+    return landmark_loss(dvf.float(), batch["kp_moving"][0][None].to(device), batch["kp_fixed"][0][None].to(device),
+                         batch["spacing_mm"][0].to(device)).item()
+
+
+ds_test = Learn2RegDataset(TEST_IMG_DIR, TEST_MSK_DIR, TEST_LM_DIR, TEST_KP_DIR, target_shape=TRAIN_TARGET_SHAPE,
+                           cache_dir=CACHE_DIR, **TEST_POINT_CONVENTION)
+cases = [("validation", ds_val, i) for i in val_idx] + [("test", ds_test, i) for i in range(len(ds_test))]
+results, tre_cases = [], []
+for group, dataset, i in cases:
+    batch = custom_collate([dataset[i]])
+    name = batch["case_name"][0]
+    if batch["has_landmarks"][0]:
+        tre_cases.append((group, dataset, i))
+        lm_f, lm_m = batch["lm_fix_orig"][0].numpy(), batch["lm_mov_orig"][0].numpy()
+        err_identity = np.linalg.norm((lm_f - lm_m) * batch["spacing_orig"][0].numpy(), axis=1).mean()
+        metric, tto_batch = "TRE", batch
+    elif batch["has_keypoints"][0]:
+        err_identity = keypoint_error(torch.zeros((1, 3, *TRAIN_TARGET_SHAPE), device=device), batch)
+        metric, tto_batch = "keypoint error", {**batch, "has_keypoints": [False]}
+    else:
+        print(f"\n--- {name} ({group}): no landmarks or keypoints, skipped ---")
+        continue
+    print(f"\n--- {name} ({group}) | {metric} without registration {err_identity:.2f} mm ---")
+
+    load_weights(model, WEIGHTS_PATH, device)
+    res = evaluate_registration(model, warp_layer, integrator, batch, device)
+    err_net = res["tre"][0] if metric == "TRE" else keypoint_error(res["dvf"], batch)
+
+    run_tto(model, warp_layer, integrator, tto_batch, device, WEIGHTS_PATH, EVAL_TTO_CFG)
+    res = evaluate_registration(model, warp_layer, integrator, batch, device)
+    err_tto = res["tre"][0] if metric == "TRE" else keypoint_error(res["dvf"], batch)
+    fold = (jacobian_map(res["dvf"][0].cpu().numpy()) <= 0).mean() * 100
+    if metric == "keypoint error":
+        print(f"   keypoint error: network {err_net:.2f} mm -> network + TTO {err_tto:.2f} mm")
+    results.append((group, metric, name, err_identity, err_net, err_tto, fold))
+
+for group, metric in (("validation", "TRE"), ("test", "keypoint error")):
+    sel = [r for r in results if r[0] == group]
+    if not sel:
+        continue
+    print(f"\n{group.upper()}: {metric} (mm)")
+    print(f"{'Patient':40s} | no registration | network | network + TTO | TTO folding")
+    for _, _, name, e0, e1, e2, fold in sel:
+        print(f"{name:40s} | {e0:15.2f} | {e1:7.2f} | {e2:13.2f} | {fold:10.2f}%")
+    means = [np.mean([r[k] for r in sel]) for k in (3, 4, 5, 6)]
+    label = f"MEAN ({len(sel)} patients)"
+    print(f"{label:40s} | {means[0]:15.2f} | {means[1]:7.2f} | {means[2]:13.2f} | {means[3]:10.2f}%")
+
+Output:
+--- case_001_exp_to_case_001_insp (validation) | TRE without registration 20.18 mm ---
+   case_001_exp_to_case_001_insp: Dice 0.7875 | TRE 18.72 mm
+   Step   1/120 | loss 1.5226 | MIND 0.3495 | lung Dice 0.2124 | tumor Dice 0.0000 | OAR Dice 0.0000 | bone Dice 0.0000 | fold 0.000%
+   Step  30/120 | loss 0.6206 | MIND 0.1777 | lung Dice 0.0919 | tumor Dice 0.0000 | OAR Dice 0.0000 | bone Dice 0.0000 | fold 0.005%
+   Step  60/120 | loss 0.4054 | MIND 0.1098 | lung Dice 0.0598 | tumor Dice 0.0000 | OAR Dice 0.0000 | bone Dice 0.0000 | fold 0.012%
+   Step  90/120 | loss 0.3213 | MIND 0.0946 | lung Dice 0.0492 | tumor Dice 0.0000 | OAR Dice 0.0000 | bone Dice 0.0000 | fold 0.002%
+   [TTO] step 90: switching to the local fit (residual weights 1.00-4.00)
+   Step 120/120 | loss 0.3312 | MIND 0.0930 | lung Dice 0.0884 | tumor Dice 0.0000 | OAR Dice 0.0000 | bone Dice 0.0000 | fold 0.492%
+   case_001_exp_to_case_001_insp: Dice 0.8576 | TRE 3.17 mm
+
+--- case_002_exp_to_case_002_insp (validation) | TRE without registration 15.60 mm ---
+   case_002_exp_to_case_002_insp: Dice 0.9143 | TRE 10.34 mm
+   Step   1/120 | loss 0.8549 | MIND 0.1831 | lung Dice 0.0859 | tumor Dice 0.0000 | OAR Dice 0.0000 | bone Dice 0.0000 | fold 0.000%
+   Step  30/120 | loss 0.4935 | MIND 0.0773 | lung Dice 0.0491 | tumor Dice 0.0000 | OAR Dice 0.0000 | bone Dice 0.0000 | fold 0.022%
+   Step  60/120 | loss 0.2823 | MIND 0.0636 | lung Dice 0.0351 | tumor Dice 0.0000 | OAR Dice 0.0000 | bone Dice 0.0000 | fold 0.035%
+   Step  90/120 | loss 0.2122 | MIND 0.0562 | lung Dice 0.0279 | tumor Dice 0.0000 | OAR Dice 0.0000 | bone Dice 0.0000 | fold 0.032%
+   [TTO] step 90: switching to the local fit (residual weights 1.00-4.00)
+   Step 120/120 | loss 0.2445 | MIND 0.0825 | lung Dice 0.0425 | tumor Dice 0.0000 | OAR Dice 0.0000 | bone Dice 0.0000 | fold 0.040%
+   case_002_exp_to_case_002_insp: Dice 0.9655 | TRE 3.54 mm
+
+--- case_003_exp_to_case_003_insp (validation) | TRE without registration 8.14 mm ---
+   case_003_exp_to_case_003_insp: Dice 0.8688 | TRE 6.48 mm
+   Step   1/120 | loss 0.8758 | MIND 0.3580 | lung Dice 0.1315 | tumor Dice 0.0000 | OAR Dice 0.0000 | bone Dice 0.0000 | fold 0.000%
+   Step  30/120 | loss 0.5580 | MIND 0.1807 | lung Dice 0.0821 | tumor Dice 0.0000 | OAR Dice 0.0000 | bone Dice 0.0000 | fold 0.006%
+   Step  60/120 | loss 0.3228 | MIND 0.0884 | lung Dice 0.0399 | tumor Dice 0.0000 | OAR Dice 0.0000 | bone Dice 0.0000 | fold 0.229%
+   Step  90/120 | loss 0.2617 | MIND 0.0802 | lung Dice 0.0355 | tumor Dice 0.0000 | OAR Dice 0.0000 | bone Dice 0.0000 | fold 0.278%
+   [TTO] step 90: switching to the local fit (residual weights 1.00-4.00)
+   Step 120/120 | loss 0.3379 | MIND 0.0654 | lung Dice 0.1103 | tumor Dice 0.0000 | OAR Dice 0.0000 | bone Dice 0.0000 | fold 3.998%
+   case_003_exp_to_case_003_insp: Dice 0.9326 | TRE 3.17 mm
+
+--- LungCT_0021_0001_to_LungCT_0021_0000 (test) | keypoint error without registration 10.31 mm ---
+   LungCT_0021_0001_to_LungCT_0021_0000: Dice 0.8925
+   Step   1/120 | loss 0.3730 | MIND 0.1962 | lung Dice 0.1086 | tumor Dice 0.0000 | OAR Dice 0.0000 | bone Dice 0.0000 | fold 0.000%
+   Step  30/120 | loss 0.1290 | MIND 0.0458 | lung Dice 0.0297 | tumor Dice 0.0000 | OAR Dice 0.0000 | bone Dice 0.0000 | fold 0.000%
+   Step  60/120 | loss 0.0957 | MIND 0.0292 | lung Dice 0.0235 | tumor Dice 0.0000 | OAR Dice 0.0000 | bone Dice 0.0000 | fold 0.000%
+   Step  90/120 | loss 0.0846 | MIND 0.0258 | lung Dice 0.0177 | tumor Dice 0.0000 | OAR Dice 0.0000 | bone Dice 0.0000 | fold 0.000%
+   [TTO] step 90: switching to the local fit (residual weights 1.00-4.00)
+   Step 120/120 | loss 0.0967 | MIND 0.0321 | lung Dice 0.0266 | tumor Dice 0.0000 | OAR Dice 0.0000 | bone Dice 0.0000 | fold 0.000%
+   LungCT_0021_0001_to_LungCT_0021_0000: Dice 0.9722
+   keypoint error: network 10.15 mm -> network + TTO 11.45 mm
+
+--- LungCT_0022_0001_to_LungCT_0022_0000 (test) | keypoint error without registration 11.39 mm ---
+   LungCT_0022_0001_to_LungCT_0022_0000: Dice 0.9211
+   Step   1/120 | loss 0.4156 | MIND 0.2829 | lung Dice 0.0800 | tumor Dice 0.0000 | OAR Dice 0.0000 | bone Dice 0.0000 | fold 0.000%
+   Step  30/120 | loss 0.2543 | MIND 0.1713 | lung Dice 0.0336 | tumor Dice 0.0000 | OAR Dice 0.0000 | bone Dice 0.0000 | fold 0.000%
+   Step  60/120 | loss 0.2198 | MIND 0.1559 | lung Dice 0.0208 | tumor Dice 0.0000 | OAR Dice 0.0000 | bone Dice 0.0000 | fold 0.002%
+   Step  90/120 | loss 0.2097 | MIND 0.1497 | lung Dice 0.0193 | tumor Dice 0.0000 | OAR Dice 0.0000 | bone Dice 0.0000 | fold 0.001%
+   [TTO] step 90: switching to the local fit (residual weights 1.00-4.00)
+   Step 120/120 | loss 0.5439 | MIND 0.4533 | lung Dice 0.0296 | tumor Dice 0.0000 | OAR Dice 0.0000 | bone Dice 0.0000 | fold 0.042%
+   LungCT_0022_0001_to_LungCT_0022_0000: Dice 0.9729
+   keypoint error: network 11.05 mm -> network + TTO 10.64 mm
+
+--- LungCT_0023_0001_to_LungCT_0023_0000 (test) | keypoint error without registration 13.19 mm ---
+   LungCT_0023_0001_to_LungCT_0023_0000: Dice 0.8683
+   Step   1/120 | loss 0.4142 | MIND 0.1965 | lung Dice 0.1332 | tumor Dice 0.0000 | OAR Dice 0.0000 | bone Dice 0.0000 | fold 0.000%
+   Step  30/120 | loss 0.1388 | MIND 0.0460 | lung Dice 0.0325 | tumor Dice 0.0000 | OAR Dice 0.0000 | bone Dice 0.0000 | fold 0.000%
+   Step  60/120 | loss 0.1060 | MIND 0.0351 | lung Dice 0.0250 | tumor Dice 0.0000 | OAR Dice 0.0000 | bone Dice 0.0000 | fold 0.000%
+   Step  90/120 | loss 0.0882 | MIND 0.0289 | lung Dice 0.0206 | tumor Dice 0.0000 | OAR Dice 0.0000 | bone Dice 0.0000 | fold 0.000%
+   [TTO] step 90: switching to the local fit (residual weights 1.00-4.00)
+   Step 120/120 | loss 0.1027 | MIND 0.0431 | lung Dice 0.0250 | tumor Dice 0.0000 | OAR Dice 0.0000 | bone Dice 0.0000 | fold 0.000%
+   LungCT_0023_0001_to_LungCT_0023_0000: Dice 0.9742
+   keypoint error: network 11.42 mm -> network + TTO 12.81 mm
+
+--- LungCT_0024_0001_to_LungCT_0024_0000 (test) | keypoint error without registration 10.52 mm ---
+   LungCT_0024_0001_to_LungCT_0024_0000: Dice 0.9247
+   Step   1/120 | loss 0.3644 | MIND 0.2339 | lung Dice 0.0768 | tumor Dice 0.0000 | OAR Dice 0.0000 | bone Dice 0.0000 | fold 0.000%
+   Step  30/120 | loss 0.1272 | MIND 0.0385 | lung Dice 0.0285 | tumor Dice 0.0000 | OAR Dice 0.0000 | bone Dice 0.0000 | fold 0.000%
+   Step  60/120 | loss 0.0984 | MIND 0.0279 | lung Dice 0.0195 | tumor Dice 0.0000 | OAR Dice 0.0000 | bone Dice 0.0000 | fold 0.000%
+   Step  90/120 | loss 0.0876 | MIND 0.0267 | lung Dice 0.0172 | tumor Dice 0.0000 | OAR Dice 0.0000 | bone Dice 0.0000 | fold 0.000%
+   [TTO] step 90: switching to the local fit (residual weights 1.00-4.00)
+   Step 120/120 | loss 0.0939 | MIND 0.0298 | lung Dice 0.0241 | tumor Dice 0.0000 | OAR Dice 0.0000 | bone Dice 0.0000 | fold 0.000%
+   LungCT_0024_0001_to_LungCT_0024_0000: Dice 0.9762
+   keypoint error: network 9.27 mm -> network + TTO 11.34 mm
+
+--- LungCT_0025_0001_to_LungCT_0025_0000 (test) | keypoint error without registration 14.00 mm ---
+   LungCT_0025_0001_to_LungCT_0025_0000: Dice 0.8448
+   Step   1/120 | loss 0.5525 | MIND 0.3028 | lung Dice 0.1561 | tumor Dice 0.0000 | OAR Dice 0.0000 | bone Dice 0.0000 | fold 0.000%
+   Step  30/120 | loss 0.2212 | MIND 0.1188 | lung Dice 0.0363 | tumor Dice 0.0000 | OAR Dice 0.0000 | bone Dice 0.0000 | fold 0.001%
+   Step  60/120 | loss 0.1813 | MIND 0.1060 | lung Dice 0.0237 | tumor Dice 0.0000 | OAR Dice 0.0000 | bone Dice 0.0000 | fold 0.002%
+   Step  90/120 | loss 0.1644 | MIND 0.0993 | lung Dice 0.0183 | tumor Dice 0.0000 | OAR Dice 0.0000 | bone Dice 0.0000 | fold 0.000%
+   [TTO] step 90: switching to the local fit (residual weights 1.00-4.00)
+   Step 120/120 | loss 0.3480 | MIND 0.2548 | lung Dice 0.0350 | tumor Dice 0.0000 | OAR Dice 0.0000 | bone Dice 0.0000 | fold 0.000%
+   LungCT_0025_0001_to_LungCT_0025_0000: Dice 0.9667
+   keypoint error: network 13.55 mm -> network + TTO 19.67 mm
+
+--- LungCT_0026_0001_to_LungCT_0026_0000 (test) | keypoint error without registration 16.82 mm ---
+   LungCT_0026_0001_to_LungCT_0026_0000: Dice 0.7610
+   Step   1/120 | loss 0.6964 | MIND 0.3228 | lung Dice 0.2407 | tumor Dice 0.0000 | OAR Dice 0.0000 | bone Dice 0.0000 | fold 0.000%
+   Step  30/120 | loss 0.3037 | MIND 0.2138 | lung Dice 0.0282 | tumor Dice 0.0000 | OAR Dice 0.0000 | bone Dice 0.0000 | fold 0.000%
+   Step  60/120 | loss 0.2566 | MIND 0.1505 | lung Dice 0.0283 | tumor Dice 0.0000 | OAR Dice 0.0000 | bone Dice 0.0000 | fold 0.000%
+   Step  90/120 | loss 0.2121 | MIND 0.1128 | lung Dice 0.0211 | tumor Dice 0.0000 | OAR Dice 0.0000 | bone Dice 0.0000 | fold 0.000%
+   [TTO] step 90: switching to the local fit (residual weights 1.00-4.00)
+   Step 120/120 | loss 0.3548 | MIND 0.1115 | lung Dice 0.0541 | tumor Dice 0.0000 | OAR Dice 0.0000 | bone Dice 0.0000 | fold 0.000%
+   LungCT_0026_0001_to_LungCT_0026_0000: Dice 0.9428
+   keypoint error: network 12.03 mm -> network + TTO 13.97 mm
+
+--- LungCT_0027_0001_to_LungCT_0027_0000 (test) | keypoint error without registration 10.80 mm ---
+   LungCT_0027_0001_to_LungCT_0027_0000: Dice 0.8108
+   Step   1/120 | loss 0.5662 | MIND 0.2656 | lung Dice 0.1914 | tumor Dice 0.0000 | OAR Dice 0.0000 | bone Dice 0.0000 | fold 0.000%
+   Step  30/120 | loss 0.1621 | MIND 0.0734 | lung Dice 0.0239 | tumor Dice 0.0000 | OAR Dice 0.0000 | bone Dice 0.0000 | fold 0.000%
+   Step  60/120 | loss 0.1362 | MIND 0.0582 | lung Dice 0.0177 | tumor Dice 0.0000 | OAR Dice 0.0000 | bone Dice 0.0000 | fold 0.000%
+   Step  90/120 | loss 0.1318 | MIND 0.0555 | lung Dice 0.0233 | tumor Dice 0.0000 | OAR Dice 0.0000 | bone Dice 0.0000 | fold 0.000%
+   [TTO] step 90: switching to the local fit (residual weights 1.00-4.00)
+   Step 120/120 | loss 0.1817 | MIND 0.0626 | lung Dice 0.0442 | tumor Dice 0.0000 | OAR Dice 0.0000 | bone Dice 0.0000 | fold 0.061%
+   LungCT_0027_0001_to_LungCT_0027_0000: Dice 0.9577
+   keypoint error: network 9.92 mm -> network + TTO 11.77 mm
+
+--- LungCT_0028_0001_to_LungCT_0028_0000 (test) | keypoint error without registration 3.04 mm ---
+   LungCT_0028_0001_to_LungCT_0028_0000: Dice 0.8681
+   Step   1/120 | loss 0.5956 | MIND 0.3838 | lung Dice 0.1337 | tumor Dice 0.0000 | OAR Dice 0.0000 | bone Dice 0.0000 | fold 0.000%
+   Step  30/120 | loss 0.3426 | MIND 0.2606 | lung Dice 0.0240 | tumor Dice 0.0000 | OAR Dice 0.0000 | bone Dice 0.0000 | fold 0.090%
+   Step  60/120 | loss 0.3022 | MIND 0.2313 | lung Dice 0.0198 | tumor Dice 0.0000 | OAR Dice 0.0000 | bone Dice 0.0000 | fold 0.005%
+   Step  90/120 | loss 0.2600 | MIND 0.1775 | lung Dice 0.0182 | tumor Dice 0.0000 | OAR Dice 0.0000 | bone Dice 0.0000 | fold 0.053%
+   [TTO] step 90: switching to the local fit (residual weights 1.00-4.00)
+   Step 120/120 | loss 0.5846 | MIND 0.3917 | lung Dice 0.0406 | tumor Dice 0.0000 | OAR Dice 0.0000 | bone Dice 0.0000 | fold 0.235%
+   LungCT_0028_0001_to_LungCT_0028_0000: Dice 0.9620
+   keypoint error: network 6.52 mm -> network + TTO 5.78 mm
+
+--- LungCT_0029_0001_to_LungCT_0029_0000 (test) | keypoint error without registration 10.53 mm ---
+   LungCT_0029_0001_to_LungCT_0029_0000: Dice 0.9045
+   Step   1/120 | loss 0.3490 | MIND 0.1879 | lung Dice 0.0964 | tumor Dice 0.0000 | OAR Dice 0.0000 | bone Dice 0.0000 | fold 0.000%
+   Step  30/120 | loss 0.1349 | MIND 0.0357 | lung Dice 0.0411 | tumor Dice 0.0000 | OAR Dice 0.0000 | bone Dice 0.0000 | fold 0.000%
+   Step  60/120 | loss 0.0903 | MIND 0.0210 | lung Dice 0.0255 | tumor Dice 0.0000 | OAR Dice 0.0000 | bone Dice 0.0000 | fold 0.000%
+   Step  90/120 | loss 0.0775 | MIND 0.0196 | lung Dice 0.0201 | tumor Dice 0.0000 | OAR Dice 0.0000 | bone Dice 0.0000 | fold 0.000%
+   [TTO] step 90: switching to the local fit (residual weights 1.00-4.00)
+   Step 120/120 | loss 0.0766 | MIND 0.0238 | lung Dice 0.0233 | tumor Dice 0.0000 | OAR Dice 0.0000 | bone Dice 0.0000 | fold 0.000%
+   LungCT_0029_0001_to_LungCT_0029_0000: Dice 0.9759
+   keypoint error: network 10.94 mm -> network + TTO 10.37 mm
+
+--- LungCT_0030_0001_to_LungCT_0030_0000 (test): no landmarks or keypoints, skipped ---
+
+VALIDATION: TRE (mm)
+Patient                                  | no registration | network | network + TTO | TTO folding
+case_001_exp_to_case_001_insp            |           20.18 |   18.72 |          3.17 |       0.18%
+case_002_exp_to_case_002_insp            |           15.60 |   10.34 |          3.54 |       0.04%
+case_003_exp_to_case_003_insp            |            8.14 |    6.48 |          3.17 |       5.45%
+MEAN (3 patients)                        |           14.64 |   11.85 |          3.29 |       1.89%
+
+TEST: keypoint error (mm)
+Patient                                  | no registration | network | network + TTO | TTO folding
+LungCT_0021_0001_to_LungCT_0021_0000     |           10.31 |   10.15 |         11.45 |       0.00%
+LungCT_0022_0001_to_LungCT_0022_0000     |           11.39 |   11.05 |         10.64 |       0.04%
+LungCT_0023_0001_to_LungCT_0023_0000     |           13.19 |   11.42 |         12.81 |       0.00%
+LungCT_0024_0001_to_LungCT_0024_0000     |           10.52 |    9.27 |         11.34 |       0.00%
+LungCT_0025_0001_to_LungCT_0025_0000     |           14.00 |   13.55 |         19.67 |       0.00%
+LungCT_0026_0001_to_LungCT_0026_0000     |           16.82 |   12.03 |         13.97 |       0.00%
+LungCT_0027_0001_to_LungCT_0027_0000     |           10.80 |    9.92 |         11.77 |       0.06%
+LungCT_0028_0001_to_LungCT_0028_0000     |            3.04 |    6.52 |          5.78 |       0.27%
+LungCT_0029_0001_to_LungCT_0029_0000     |           10.53 |   10.94 |         10.37 |       0.00%
+MEAN (9 patients)                        |           11.18 |   10.54 |         11.98 |       0.04%

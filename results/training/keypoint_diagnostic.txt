@@ -1,0 +1,57 @@
+5. Diagnostic: keypoint error on training and validation pairs
+==============================================================
+Notebook: main.ipynb, cell executed as In[6], GPU: NVIDIA A100.
+
+Description (notebook markdown):
+Mean keypoint error (mm, without augmentation) with the identity and with the best model, for every training and validation pair. Comparing the mean reduction of the two groups tells whether the network is limited by learning (both low) or by generalization (training high, validation low).
+
+Code:
+require("ds_val", "train_idx", "val_idx", hint="run section 3 with RUN_TRAINING = True")
+load_weights(model, WEIGHTS_PATH, device)
+model.eval()
+with torch.no_grad():
+    for group, indices in (("TRAINING", train_idx), ("VALIDATION", val_idx)):
+        reductions = []
+        print(f"\n{group}")
+        for i in indices:
+            item = custom_collate([ds_val[i]])
+            if not item["has_keypoints"][0]:
+                continue
+            mov, fix = item["moving"].to(device), item["fixed"].to(device)
+            p_m, p_f = item["kp_moving"][0][None].to(device), item["kp_fixed"][0][None].to(device)
+            sp = item["spacing_mm"][0].to(device)
+            with autocast_bf16(device):
+                dvf, _ = predict_dvf(model, integrator, warp_layer, mov, fix)
+            err_id = landmark_loss(torch.zeros_like(dvf.float()), p_m, p_f, sp).item()
+            err_net = landmark_loss(dvf.float(), p_m, p_f, sp).item()
+            reductions.append(100 * (1 - err_net / err_id))
+            print(f"  {item['case_name'][0]:40s} identity {err_id:6.2f} mm -> network {err_net:6.2f} mm "
+                  f"({reductions[-1]:4.0f}% lower)")
+        print(f"  mean reduction: {np.mean(reductions):.0f}%")
+
+Output:
+TRAINING
+  case_004_exp_to_case_004_insp            identity   5.96 mm -> network   4.05 mm (  32% lower)
+  case_005_exp_to_case_005_insp            identity  14.44 mm -> network   8.39 mm (  42% lower)
+  case_006_exp_to_case_006_insp            identity  13.86 mm -> network   9.72 mm (  30% lower)
+  case_007_exp_to_case_007_insp            identity   8.08 mm -> network   4.86 mm (  40% lower)
+  case_008_exp_to_case_008_insp            identity  14.06 mm -> network   6.22 mm (  56% lower)
+  case_009_exp_to_case_009_insp            identity  16.69 mm -> network   8.79 mm (  47% lower)
+  case_010_exp_to_case_010_insp            identity   7.75 mm -> network   5.19 mm (  33% lower)
+  case_011_exp_to_case_011_insp            identity   8.37 mm -> network   4.93 mm (  41% lower)
+  case_012_exp_to_case_012_insp            identity  11.63 mm -> network   7.23 mm (  38% lower)
+  case_013_exp_to_case_013_insp            identity   7.61 mm -> network   4.84 mm (  36% lower)
+  case_014_exp_to_case_014_insp            identity  10.01 mm -> network   5.22 mm (  48% lower)
+  case_015_exp_to_case_015_insp            identity   9.54 mm -> network   4.09 mm (  57% lower)
+  case_016_exp_to_case_016_insp            identity   3.87 mm -> network   2.27 mm (  41% lower)
+  case_017_exp_to_case_017_insp            identity  22.09 mm -> network  11.32 mm (  49% lower)
+  case_018_exp_to_case_018_insp            identity   4.11 mm -> network   2.68 mm (  35% lower)
+  case_019_exp_to_case_019_insp            identity  18.56 mm -> network   9.06 mm (  51% lower)
+  case_020_exp_to_case_020_insp            identity   6.93 mm -> network   4.86 mm (  30% lower)
+  mean reduction: 42%
+
+VALIDATION
+  case_001_exp_to_case_001_insp            identity  20.24 mm -> network  18.61 mm (   8% lower)
+  case_002_exp_to_case_002_insp            identity  16.51 mm -> network  11.73 mm (  29% lower)
+  case_003_exp_to_case_003_insp            identity   9.60 mm -> network   7.23 mm (  25% lower)
+  mean reduction: 21%

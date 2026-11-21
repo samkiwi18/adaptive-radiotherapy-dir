@@ -1,0 +1,37 @@
+Deep-learning deformable registration for adaptive radiotherapy
+Copyright 2026 Samuele Caggia
+
+This product is licensed under the Apache License, Version 2.0 (see LICENSE).
+It uses or refers to the following third-party material, which is NOT included in this repository unless stated
+otherwise and keeps its own license.
+
+4D-Lung (The Cancer Imaging Archive)
+  Hugo GD, Weiss E, Sleeman WC, Balik S, Keall PJ, Lu J, Williamson JF. Data from 4D Lung Imaging of NSCLC Patients
+  (Version 2). The Cancer Imaging Archive, 2016. https://doi.org/10.7937/K9/TCIA.2016.ELN8YGLE
+  License: Creative Commons Attribution 3.0 (https://creativecommons.org/licenses/by/3.0/), subject to the TCIA Data
+  Usage Policy (https://www.cancerimagingarchive.net/data-usage-policies-and-restrictions/).
+  Not included. The case-study figures docs/figures/case_*.png and case_flicker.gif and the numbers in
+  results/dosimetry/ are derived from subject 107_HM10395 of this collection.
+
+TotalSegmentator (organ-at-risk contours of the 4D-Lung case study)
+  Wasserthal J et al. TotalSegmentator: Robust Segmentation of 104 Anatomic Structures in CT Images. Radiology:
+  Artificial Intelligence 5(5), 2023. https://doi.org/10.1148/ryai.230024
+  The organ-at-risk contours of the case study were generated with TotalSegmentator 2.14.0 (installed version at the
+  time of writing; nnU-Net 2.8.1), task "total" (CT), run on CPU in the 3D Slicer 5.12 SlicerTotalSegmentator
+  extension. The "total" task needs no license key and is released under Apache-2.0. The contours are not part of
+  4D-Lung and are not included.
+
+Learn2Reg lung CT
+  Hering A, Murphy K, van Ginneken B. Learn2Reg Challenge: CT Lung Registration - Training Data. Zenodo, 2020.
+  https://doi.org/10.5281/zenodo.3835682
+  License: Creative Commons Attribution 4.0 International (Zenodo record; LungCT_dataset.json of the release cites
+  this record). Not included. The keypoint overlays in results/keypoints/ are derived from it; the other Learn2Reg
+  results are numbers and plots without images.
+
+MONAI self-supervised SwinUNETR weights
+  Distributed by MONAI (Project-MONAI/MONAI-extra-test-data, release 0.8.1, ssl_pretrained_weights.pth). Not
+  included; downloaded by registration/model.py when training from scratch. MONAI is licensed under Apache-2.0.
+
+matRad
+  https://github.com/e0404/matRad, version 3.2.3. License: GNU General Public License v3.0. Not included; the scripts
+  in matlab/ call it.

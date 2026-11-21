@@ -1,0 +1,39 @@
+{
+  "data": "Data: 4D-Lung, TCIA (CC BY 3.0)",
+  "subject": "107_HM10395",
+  "run": "full_network",
+  "registration": {
+    "gtv_centroid_index_zyx": [
+      22,
+      186,
+      287
+    ]
+  },
+  "dose": {
+    "slice_z_index": 22,
+    "dose_max_gy": {
+      "real_ct": 9.5117118805251,
+      "baseline": 9.3697283304216,
+      "dir_ct": 9.5094259174905,
+      "dir_cbct": 9.5348801256717
+    }
+  },
+  "gamma_2_2_pass_rate_pct": {
+    "baseline": "98.97",
+    "dir_cbct": "97.67"
+  },
+  "gamma_2_2_pass_rate_in_ptv_pct": {
+    "baseline": "92.04",
+    "dir_cbct": "100.0"
+  },
+  "gamma_slice": {
+    "baseline": {
+      "slice_failing_points": 541,
+      "slice_points": 32495
+    },
+    "dir_cbct": {
+      "slice_failing_points": 911,
+      "slice_points": 32495
+    }
+  }
+}
