@@ -13,11 +13,11 @@ test-time optimization (see *Quick start* and *Full workflow* in the [README](..
 |---|---:|---|
 | `best_reg_model.pth` | 256364750 | `79ef2c6f6664be5f5ec41b06e9df35c6` |
 
-It is published as an asset of the GitHub Release `v1.0.0` of this repository. From the repository root:
+It is published as an asset of the GitHub Release `v1.0` of this repository. From the repository root:
 
 ```bash
 curl -L -o weights/best_reg_model.pth \
-  https://github.com/samcaggia/adaptive-radiotherapy-dir/releases/download/v1.0.0/best_reg_model.pth
+  https://github.com/samkiwi18/adaptive-radiotherapy-dir/releases/download/v1.0/best_reg_model.pth
 md5sum weights/best_reg_model.pth   # 79ef2c6f6664be5f5ec41b06e9df35c6
 ```
 

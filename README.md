@@ -2,7 +2,7 @@
 
 [![License: Apache-2.0](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
 [![Python 3.11 | 3.12](https://img.shields.io/badge/python-3.11%20%7C%203.12-blue.svg)](pyproject.toml)
-[![CI](https://github.com/samcaggia/adaptive-radiotherapy-dir/actions/workflows/ci.yml/badge.svg)](https://github.com/samcaggia/adaptive-radiotherapy-dir/actions/workflows/ci.yml)
+[![CI](https://github.com/samkiwi18/adaptive-radiotherapy-dir/actions/workflows/ci.yml/badge.svg)](https://github.com/samkiwi18/adaptive-radiotherapy-dir/actions/workflows/ci.yml)
 
 Diffeomorphic deformable registration of thoracic CT and CBCT with a SwinUNETR network, refined per patient by
 test-time optimization, and the tools to check what the registration means for the dose: mass-preserving HU
@@ -59,17 +59,31 @@ pytest -q
 latest CPU-only PyTorch and runs `ruff` and `pytest` on Python 3.11 and 3.12. Install the PyTorch build that matches
 your GPU from [pytorch.org](https://pytorch.org).
 
-## Quick start
+## Pretrained weights
 
-Download the trained weights from the release (details and checksum in [`weights/README.md`](weights/README.md)):
+The trained registration network is published as an asset of the GitHub Release
+[`v1.0`](https://github.com/samkiwi18/adaptive-radiotherapy-dir/releases/tag/v1.0):
+
+| File | Size | MD5 | Content |
+|---|---:|---|---|
+| `best_reg_model.pth` | 256 MB | `79ef2c6f6664be5f5ec41b06e9df35c6` | SwinUNETR + velocity head, best validation TRE (11.85 mm) at the end of finetuning on Learn2Reg lung CT |
+
+From the repository root:
 
 ```bash
 curl -L -o weights/best_reg_model.pth \
-  https://github.com/samcaggia/adaptive-radiotherapy-dir/releases/download/v1.0.0/best_reg_model.pth
+  https://github.com/samkiwi18/adaptive-radiotherapy-dir/releases/download/v1.0/best_reg_model.pth
+md5sum weights/best_reg_model.pth
 ```
 
-Get the Learn2Reg lung CT data (see [Data](#data)) and register a test pair. In the LungCT release `_0001` is the
-moving and `_0000` the fixed image:
+`scripts/register_pair.py` (`--weights`) and the notebook (`WEIGHTS_PATH`) read it from `weights/best_reg_model.pth`. It
+is the starting point of every test-time optimization. The MONAI self-supervised encoder weights, needed only to train
+from scratch, are downloaded automatically ([`weights/README.md`](weights/README.md)).
+
+## Quick start
+
+Download the pretrained weights ([Pretrained weights](#pretrained-weights)), then get the Learn2Reg lung CT data (see
+[Data](#data)) and register a test pair. In the LungCT release `_0001` is the moving and `_0000` the fixed image:
 
 ```bash
 python scripts/register_pair.py \
