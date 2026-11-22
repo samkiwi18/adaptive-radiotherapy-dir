@@ -35,11 +35,6 @@ All panels: Data: 4D-Lung, TCIA (CC BY 3.0), subject 107_HM10395
 ([hugo2016_4dlung_data](../REFERENCES.md#hugo2016_4dlung_data)). The GTV is the expert contour of 4D-Lung; spinal
 cord, lungs and the other organs at risk are TotalSegmentator contours.
 
-![Checkerboard comparison](figures/case_checkerboard.png)
-
-*2 cm checkerboards of the real CT with the planning CT (left: edges of the tumor and vessels break across the tiles),
-with the planning CT registered to the CT (centre: edges continue) and of the CBCT with the planning CT registered to
-the CBCT (right). Dashed: GTV of the real CT (expert contour).*
 
 ![DVH](figures/case_dvh.png)
 
